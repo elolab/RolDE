@@ -1,0 +1,431 @@
+---
+title: "Introduction to the Robust longitudinal Differential Expression (RolDE) method"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(RolDE)
+library(printr)
+library(knitr)
+```
+
+### Introduction 
+
+RolDE is a composite method, consisting of three independent modules with different approaches to detecting differential expression. The combination of these diverse modules allows RolDE to robustly detect varying differences in longitudinal trends and expression levels in diverse data types and experimental settings.
+
+The RegROTS module merges the power of regression modelling with the power of the established differential expression method Reproducibility Optimized Test Statistic (ROTS) (Elo et al., Suomi et al.). A polynomial regression model of protein expression over time is fitted separately for each replicate (individual) in each condition. Differential expression between two replicates (individuals) in different conditions is examined by comparing the coefficients of the replicate-specific regression models. If all coefficient differences are zero, no longitudinal differential expression between the two replicates in different conditions exist. For a through exploration of differential expression between the conditions, all possible combinations of replicates in different conditions are examined.
+
+In the DiffROTS module the expression of replicates in different conditions are directly compared at all time points. Again, if the expression level differences at all time points are zero, no differential expression between the examined replicates in different conditions exist. Similarly to the RegROTS module, differential expression is examined between all possible combinations of replicates in the different conditions. In non-aligned time point data, the expression level differences between the conditions is examined when accounting for time-associated trends of varying complexity in the data. More specifically, the expression level differences between the conditions are examined when adjusting for increasingly complex time-related expression trends of polynomial degrees d=0,1,.,d where d is the maximum degree for the polynomial and the same degree as is used for the PolyReg module.
+
+In the PolyReg module, polynomial regression modelling is used to detect longitudinal differential expression. Condition is included as a categorical factor within the models and by investigating the condition related intercept and differences in time-related polynomial slopes at different leves of the condition factor, average group level and time related differences in longitudinal expression between the conditions can be examined.
+
+Finally, to conclusively detect any differential expression, the findings from the different modules are combined using the rank product. For more details about the method, see the original RolDE publication (Valikangas et al.).
+
+### Applying RolDE in example datasets with aligned time points
+
+First, load the dataset and the design matrix to be used:
+
+```{r load data1, echo=TRUE}
+data(data1)
+data("des_matrix1")
+```
+
+To understand the structure of the design matrix and what a design matrix for RolDE
+should look like, let's explore the data and the design matrix:
+
+Dimensions of the data:
+
+```{r explore data1, echo=TRUE}
+dim(data1)
+```
+
+Column names of the data:
+
+```{r explore data1 2, echo=TRUE}
+head(colnames(data1))
+```
+
+Dimensions of the design matrix:
+
+```{r explore data1 3, echo=TRUE}
+dim(des_matrix1)
+```
+
+Column names of the design matrix:
+
+```{r explore data1 4, echo=TRUE}
+colnames(des_matrix1)
+```
+
+Contents of the design matrix:
+
+```{r explore data1 5, echo=TRUE}
+head(des_matrix1)
+tail(des_matrix1)
+```
+
+The first column of the design matrix should contain the sample names of the data (column names of the data). The second column should indicate the condition/group factor status for each sample to be explored (e.g. sick/healthy, control/case). The third column should indicate the time point for each sample (data with aligned time points) or time value (or equivalent, e.g. age, temperature, disease progression) information in data with non-aligned time points. The fourth and final column of the design matrix should indicate the replicate / individual each sample came from. Let's look at the exemplary design matrix a little bit more:
+
+Unique samples:
+
+```{r explore data1 6, echo=TRUE}
+unique(des_matrix1[,1])
+```
+
+Conditions:
+
+```{r explore data1 7, echo=TRUE}
+unique(des_matrix1[,2])
+table(des_matrix1[,2])
+```
+
+Time points:
+
+```{r explore data1 8, echo=TRUE}
+unique(des_matrix1[,3])
+table(des_matrix1[,3])
+```
+
+Replicates:
+
+```{r explore data1 9, echo=TRUE}
+unique(des_matrix1[,4])
+table(des_matrix1[,4])
+```
+
+So, we have a dataset of 30 samples, 2 conditions, 6 replicates each with 5 time points. The timepoints in the data are aligned. 
+
+This is how a design matrix for a dataset for RolDE should look like. This gives all the essential information for RolDE it needs to determine longitudinal differential expression between the conditions. 
+
+By bare minimum, RolDE needs the data and the design matrix. By default RolDE assumes that the time points in the data are aligned. If not defined otherwise, RolDE will by default use sequential processing. However, using parallel processing and multiple threads will greatly reduce the computational time required by RolDE. 
+
+Running RolDE using parallel processing and 3 threads:
+
+```{r RolDE data1, echo=TRUE, eval=FALSE}
+data1.res<-RolDE(data=data1, des_matrix=des_matrix1, doPar=T, n_cores=3)
+```
+
+```{r explore RolDE res data1, echo=FALSE}
+data(res1)
+data1.res=res1
+```
+
+The results of RolDE are returned in a list with lot of information:
+
+```{r explore RolDE res data1 2, echo=TRUE}
+names(data1.res)
+```
+
+The main results of RolDE are located in the first element of the provided result list. Elements 2,4 and 6 provide the result for the different modules of RolDE separately (the RegROTS, DiffROTS and PolyReg modules).
+
+Elements 3 and 5 provide the significance values for the different ROTS runs of the RegROTS and DiffROTS modules, respectively. The used ROTS runs within those modules are given in element 8. The comparison between replicates in different conditions are divided into the different runs so that each sample is used only once within each run to preserve the proper degrees of freedom for statistical testing. 
+
+All the condition related significance values of the polynomial regression models in the PolyReg module are given in element 7. The used polynomial degrees for the regression models in the RegROTS and the PolyReg modules are given in element 9. And in element 10, all the inputs used by RolDE (both given by the user and those determined automatically by the method) are given. 
+
+Typically, the main (only) interest of the user is in element 1, where the main results of RolDE are given:
+
+```{r explore RolDE res data1 3, echo=TRUE}
+RolDE.data1<-data1.res$RolDE_Results
+dim(RolDE.data1)
+colnames(RolDE.data1)
+```
+
+By default, the features in the result data frame are given in the same order as entered. 
+
+Let's order the results based on the strength of longitudinal differential expression detected by RolDE:
+
+```{r explore RolDE res data1 4, echo=TRUE, fig.height=5, fig.width=7}
+RolDE.data1<-RolDE.data1[order(as.numeric(RolDE.data1[,2])),]
+head(RolDE.data1, 5)
+```
+
+Explore the distribution of the estimated significance values:
+
+```{r explore RolDE res data1 5, echo=TRUE, fig.height=5, fig.width=7}
+hist(RolDE.data1$`Estimated Significance Value`, main = "Estimated significance values", xlab="")
+```
+
+As can be observed, the distribution of the estimated significance values is approximately uniform. Data1 is random data; the values for the features have been randomly assigned from a normal distribution with a mean of 22 and a standard deviation of 1.5. Overall, the null hypothesis between Condition1 and Condition2 is true; the conditions are not differentially expressed and a uniform significance value distribution is expected.
+
+After correcting for the simultaneous testing of multiple hypothesis by using the Bejamini-Hochberg (FDR) correction, no differentially epxressed feature remains with the commonly used FDR level of 0.05:
+
+```{r explore RolDE res data1 6, echo=TRUE}
+length(which(RolDE.data1$`Adjusted Estimated Significance Value`<=0.05))
+```
+
+The calculation of significance values in RolDE is controlled via the parameters *estSigVal* and *sigValSampN* which control if the significance values should be calculated and how many permutations should be used when determining the significance values. Computational time required by RolDE can be reduced by not calculating the significance values by setting *estSigVal* to FALSE. By increasing *sigValSampN*, the significance values can be estimated more accurately but the required computational time will also increase. If parallel processing for RolDE is enabled, it will also be utilized when estimating the significance values. 
+
+The estimated significance values can be adjusted by any method included in the p.adjust method in the stats package. Alternatively, q-values as defined by Storey et al. in the Bioconductor package qvalue can be used. Valid values for *sig_adj_meth* are then: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY","fdr","none", "qvalue". 
+
+## Semi-simulated spike-in dataset
+
+In addition to the random data already explored, semi-simulated spike-in datasets with differential expression between the conditions are also included in the RolDE package:
+
+```{r explore data3, echo=TRUE}
+data("data3")
+data("des_matrix3")
+?data3
+```
+
+All the datasets included in the RolDE package are briefly described in the variable *data_descriptions*
+
+```{r data included in RolDE, echo=TRUE}
+data("data_descriptions")
+data_descriptions
+```
+
+Let's run RolDE for data3 using the Bonferroni procedure for multiple hypothesis adjustement:
+
+```{r Run RolDE for data3, echo=TRUE, eval=FALSE}
+data3.res<-RolDE(data=data3, des_matrix=des_matrix3, doPar=T, n_cores=3, sig_adj_meth = "bonferroni")
+```
+
+```{r explore RolDE res data3, echo=FALSE}
+data(res3)
+data3.res=res3
+```
+
+Retrieve the final RolDE results and organize the results based on strength of differential expression:
+
+```{r explore RolDE res data3 2, echo=TRUE, fig.height=5, fig.width=7}
+RolDE.data3<-data3.res$RolDE_Results
+RolDE.data3<-RolDE.data3[order(as.numeric(RolDE.data3[,2])),]
+head(RolDE.data3, 5)
+```
+
+Explore the distribution of the estimated significance values:
+
+```{r explore RolDE res data3 3, echo=TRUE, fig.height=5, fig.width=7}
+hist(RolDE.data3$`Estimated Significance Value`, main = "Estimated significance values", xlab="")
+```
+
+We can now observe, that the distribution of signficance values is very different than for the random data of data1, where the null hypothesis was true. In data3, true differential expression between the conditions exists. The spike-in proteins are expected to change between the conditions, while most of the background proteins are expected to remain stable between conditions. However, in reality this is not always the case - some background proteins might be changing too due to variations in the experimental conditions during the preparation of the dataset. 
+
+Let's see how RolDE has ranked the spike-in proteins known to be changing between the conditions:
+
+```{r explore RolDE res data3 4, echo=TRUE, fig.height=5, fig.width=7}
+grep("ups", RolDE.data3[,1])
+```
+
+Most of the spike-in proteins are located near the top of the result list, as expected. 
+
+How many of the proteins remain signifcant at the alpha level of 0.05 after the Bonferroni procedure to control for multiple hypothesis testing:
+
+```{r explore RolDE res data3 5, echo=TRUE, fig.height=5, fig.width=7}
+length(which(RolDE.data3[,4]<=0.05))
+```
+
+Findings from the DE analysis can be plotted with the *plotFindings* function included in the RolDE package:
+
+```{r plotfindings, echo=TRUE, fig.height=5, fig.width=7}
+?plotFindings
+```
+
+### Applying RolDE in example data with non aligned time points
+
+In addition to data with aligned time points, RolDE can be applied in data with non-aligned time points. However, the *aligned* parameter in RolDE must now be set to FALSE in order for RolDE to discern that time points in the data are not aligned. 
+
+The design matrix for data with non aligned time points is assembled similarly:
+
+```{r explore data5, echo=TRUE}
+data(data5)
+data("des_matrix5")
+dim(data5)
+dim(des_matrix5)
+head(colnames(data5))
+head(des_matrix5)
+tail(des_matrix5)
+```
+
+Instead of fixed time points, the integer values in the time point column 3 are now replaces with continuous numerical values, or time values. In this example data, column 3 consists of age of the patients at the time of the sampling. 
+
+Running RolDE with the default settings and parallel processing for data5:
+
+```{r Run RolDE for data5, echo=TRUE, eval=FALSE}
+data5.res<-RolDE(data=data5, des_matrix=des_matrix5, aligned = F, doPar=T, n_cores=7)
+```
+
+### Changing the settings for RolDE
+
+While RolDE performs typically very well with the default parameter values, the user might sometimes wish to alter some of these values for a specific kind of analysis. Some of the most important parameters include:
+
+Parameter *min_comm_diff* controls how many common time points must two replicates (individuals) have in different conditions to be compared. The first value controls the number of common time points for the RegROTS module, while the second one controls the number of common time points for the DiffROTS module. If *min_comm_diff* is set to "auto", RolDE will use a value of 3 for the RegROTS module and a value of 1 for the DiffROTS module.In the case of data with non-aligned time points, the first value of *min_comm_diff* controls how many time values (or similar, e.g. age, temperature) must both replicates in different conditions have in the common time interval to be compared. 
+
+Defining larger values for the minimum number of common time points to be used in
+RolDE with data1:
+
+```{r change RolDE parameters, echo=TRUE, eval=FALSE}
+data1.res<-RolDE(data=data1, des_matrix=des_matrix1, doPar=T, n_cores=3, min_comm_diff = c(4,3))
+```
+
+Using the above values for *min_comm_diff* requires the replicates in different conditions to have 4 common time points to be compared in the RegROTS module and 3 common time points to be compared in the DiffROTS module. 
+
+*min_ind_timep* determines the minimum number of time points/values all individuals included in the analysis must have. If any individual has less time points than *min_ind_timep*, RolDE will throw an error. Such replicates must be removed from the analysis. Any replicate or individual cannot have less than 3 time points/values to be included in the analysis.
+
+*min_feat_obs* controls the number of non-missing values a feature must have for an individual in a condition to be compared in the RegROTS module and the DiffROTS module (in data with aligned time points). A feature is required to have at least *min_feat_obs* non-missing values for both replicates in the different conditions to be compared. If lowered, more missing values are allowed but the analysis may become less accurate. If increased, only replicates with less missing values for a feature are compared. 
+
+The user can control the degree of polynomials used by the RegROTS and the PolyReg modules via the *degtree_RegROTS* and the *degree_PolyReg parameters*. If left to "auto", RolDE will by default use as the *degree_RegROTS*=max(1, min(floor(median(t)/2),4)) and as the *degree_PolyReg*=max(2, min((median(t)-1),5)), where t is a vector of the number of time points/values in all the replicates.
+
+Using RolDE with non default user given polynomial degrees for the RegROTS and PolyReg modules:
+
+```{r change RolDE parameters 2, echo=TRUE, eval=FALSE}
+data1.res<-RolDE(data=data1, des_matrix=des_matrix1, doPar=T, n_cores=3, degree_RegROTS = 2, degree_PolyReg = 3)
+```
+
+*na_treat* controls the treatment of missing values when calculating rank products. The default option "last" will rank features with missing scores last and RolDE will produce a final rank product for all the features in the data. If *na_treat* is set to "keep", missing scores are retained as missing when calculating internal rank products and some features might receive a missing final rank product if enough values are missing for the feature. 
+
+By default, RolDE uses fixed effects only regression with a common intercept and slopes for the replicates/individuals in the PolyReg module and in the DiffROTS module (in data with non-aligned time points). However, the user can choose to use mixed effects regression modelling when appropriate, by setting the parameter *polyregType* as "mixed". The desired level of random effects for the mixed models can be set with the parameter *mix_degree*. When *polyregType* is set to "mixed" and *mix_degree* is set to 0 (the default), a random intercept for each replicate will be used for the polynomial regression models in the PolyReg module and the DiffROTS module (in data with non-aligned time points). Alternatively, a random effect also for the linear term (slope) for each replicate can be allowed by setting the *mix_degree* to 1.
+
+Analyzing data1 using mixed effects modelling with random intercepts for the replicates in the PolyReg module of RolDE:
+
+```{r change RolDE parameters 3, echo=TRUE, eval=FALSE}
+data1.res<-RolDE(data=data1, des_matrix=des_matrix1, doPar=T, n_cores=3, polyregType = "mixed", mix_degree = 0)
+```
+
+Analyzing data5 using mixed effects modelling with random intercepts and also random linear slopes for the replicates in the PolyReg AND the DiffROTS modules of RolDE:
+
+```{r change RolDE parameters 4, echo=TRUE, eval=FALSE}
+data5.res<-RolDE(data=data5, des_matrix=des_matrix5, aligned = F, doPar=T, n_cores=7, polyregType = "mixed", mix_degree = 1)
+```
+
+Altering the *polyregType* parameter has only an effect for the DiffROTS module, when the time points in the data are non-aligned. In non-aligned data, the expression level differences between the conditions in the DiffROTS module is examined when accounting for time-associated trends of varying complexity in the data. 
+
+### Preparation of data for RolDE
+
+The data for RolDE needs to be appropriately preprocessed. RolDE does not perform any filtering or normalization for the data; such preprocessing must be performed prior to applying RolDE. Similarly, adjusting for possible confounding effects in the data must be performed before the application of RolDE. 
+
+### Example of the preparation of data from paired measurements for RolDE
+
+(Note: the following section can be removed. I thought I would provide a simple example on how to adjust paired data to enable the analysis of such data in the unpaired mode in RolDE.)
+
+As mentioned, the data needs to be adjusted for possible confounding factors / effects prior to entering RolDE. For example, if the data is from paired measurements of replicates/individuals, the data can be adjusted for this effect prior to entering RolDE.
+
+Let's make data3 paired so that replicates 1,2 and 3 measured in the different conditions are considered as paired measurements:
+
+```{r create paired data, echo=TRUE}
+data.pair=data3
+for(i in 1:nrow(data.pair)){
+  data.pair[i,c(grep("r2", colnames(data.pair)))]=data.pair[i,c(grep("r2", colnames(data.pair)))]+rnorm(mean = 0.5, sd=0.05, n = 1)
+  data.pair[i,c(grep("r3", colnames(data.pair)))]=data.pair[i,c(grep("r3", colnames(data.pair)))]+rnorm(mean = 1, sd=0.05, n = 1)
+}
+```
+
+Now the measurements for replicate 2 ("r2") in both conditions are separated by a constant from the measurements from replicate 1 ("r1"), simulating a slight batch effect resulting from paired experiments or processing of the samples in a paired manner. This effect is unique to each protein, so the constant difference is also unique to each protein. The same is true for replicate 3 ("r3"); measurements for replicate 3 are separated from the measurements of replicate 2 and replicate 1 by different constants factors, varying for each protein. 
+
+Let's see how this affects the measurements for an example spike-in protein:
+
+```{r plot paired data, echo=TRUE, fig.width=8, fig.height=4}
+
+head(rownames(data3))
+
+#Look at protein "P02768ups|ALBU_HUMAN_UPS;CON__P02768-1" as an example
+
+par(mfrow=c(1,2))
+
+plot(as.numeric(data3[2,c(grep("r1", colnames(data3)[1:15]))]), type = "o", col="1", ylim = c(range(data3[2,])), main="Unpaired data3", ylab = "Expression", xlab = "Timepoint")
+lines(as.numeric(data3[2,c(grep("r2", colnames(data3)[1:15]))]), type = "o", col="2")
+lines(as.numeric(data3[2,c(grep("r3", colnames(data3)[1:15]))]), type = "o", col="3")
+
+lines(as.numeric(data3[,16:30][2,c(grep("r1", colnames(data3)[16:30]))]), type = "o", col="1", lty=3)
+lines(as.numeric(data3[,16:30][2,c(grep("r2", colnames(data3)[16:30]))]), type = "o", col="2", lty=3)
+lines(as.numeric(data3[,16:30][2,c(grep("r3", colnames(data3)[16:30]))]), type = "o", col="3", lty=3)
+
+#Paired data3:
+plot(as.numeric(data.pair[2,c(grep("r1", colnames(data.pair)[1:15]))]), type = "o", col="1", ylim = c(range(data.pair[2,])), main="Paired data3", ylab = "Expression", xlab = "Timepoint")
+lines(as.numeric(data.pair[2,c(grep("r2", colnames(data.pair)[1:15]))]), type = "o", col="2")
+lines(as.numeric(data.pair[2,c(grep("r3", colnames(data.pair)[1:15]))]), type = "o", col="3")
+
+lines(as.numeric(data.pair[,16:30][2,c(grep("r1", colnames(data.pair)[16:30]))]), type = "o", col="1", lty=3)
+lines(as.numeric(data.pair[,16:30][2,c(grep("r2", colnames(data.pair)[16:30]))]), type = "o", col="2", lty=3)
+lines(as.numeric(data.pair[,16:30][2,c(grep("r3", colnames(data.pair)[16:30]))]), type = "o", col="3", lty=3)
+```
+
+Replicates in the data are colored with different colors, and the expression of replicates in Condition 1 are presented with a solid line while the expression of the corresponding replicates in Condition 2 are presented with a dotted line. 
+
+From the above figure, we can observe that the replicates are now expressed at slightly different levels in the paired data, simulating a slight batch effect resulting from paired processing of the samples in the data. 
+
+However, we can adjust for such a pair effect with simple linear models:
+
+```{r adjust paired data, echo=TRUE}
+data.adj=matrix(nrow = nrow(data.pair), ncol=ncol(data.pair))
+colnames(data.adj)=colnames(data.pair)
+rownames(data.adj)=rownames(data.pair)
+
+for(i in 1:nrow(data.adj)){
+  temp=data.frame(matrix(nrow = ncol(data.pair), ncol=2))
+  temp[,1]=as.numeric(data.pair[i,])
+  temp[,2]=as.factor(rep(c(1,2,3), 10))
+ 
+  colnames(temp)=c("x", "pair")
+  rownames(temp)=colnames(data.pair)
+  
+  mod=lm(x~as.numeric(pair), data=temp)
+  res=mod$residuals
+  res=res+mean(as.numeric(temp[,1]), na.rm = T)
+  
+  data.adj[i,]=res
+}
+```
+
+Now, Let's see how well we were able to adjust for the pair effect:
+
+```{r plot adjusted data, echo=FALSE, fig.width=8, fig.height=4}
+
+par(mfrow=c(1,3))
+
+#Unpaired data1
+plot(as.numeric(data3[2,c(grep("r1", colnames(data3)[1:15]))]), type = "o", col="1", ylim = c(range(data3[2,])), main = "Unpaired data3", ylab = "Expression", xlab = "Timepoint")
+lines(as.numeric(data3[2,c(grep("r2", colnames(data3)[1:15]))]), type = "o", col="2")
+lines(as.numeric(data3[2,c(grep("r3", colnames(data3)[1:15]))]), type = "o", col="3")
+
+lines(as.numeric(data3[,16:30][2,c(grep("r1", colnames(data3)[16:30]))]), type = "o", col="1", lty=3)
+lines(as.numeric(data3[,16:30][2,c(grep("r2", colnames(data3)[16:30]))]), type = "o", col="2", lty=3)
+lines(as.numeric(data3[,16:30][2,c(grep("r3", colnames(data3)[16:30]))]), type = "o", col="3", lty=3)
+
+#Paired data3:
+plot(as.numeric(data.pair[2,c(grep("r1", colnames(data.pair)[1:15]))]), type = "o", col="1", ylim = c(range(data.pair[2,])), main = "Paired data3", ylab = "Expression", xlab = "Timepoint")
+lines(as.numeric(data.pair[2,c(grep("r2", colnames(data.pair)[1:15]))]), type = "o", col="2")
+lines(as.numeric(data.pair[2,c(grep("r3", colnames(data.pair)[1:15]))]), type = "o", col="3")
+
+lines(as.numeric(data.pair[,16:30][2,c(grep("r1", colnames(data.pair)[16:30]))]), type = "o", col="1", lty=3)
+lines(as.numeric(data.pair[,16:30][2,c(grep("r2", colnames(data.pair)[16:30]))]), type = "o", col="2", lty=3)
+lines(as.numeric(data.pair[,16:30][2,c(grep("r3", colnames(data.pair)[16:30]))]), type = "o", col="3", lty=3)
+
+#Paired data3 adjusted for the paired effect:
+plot(as.numeric(data.adj[2,c(grep("r1", colnames(data.adj)[1:15]))]), type = "o", col="1", ylim = c(range(data.adj[2,])), main = "Adjusted paired data3", ylab = "Expression", xlab = "Timepoint")
+lines(as.numeric(data.adj[2,c(grep("r2", colnames(data.adj)[1:15]))]), type = "o", col="2")
+lines(as.numeric(data.adj[2,c(grep("r3", colnames(data.adj)[1:15]))]), type = "o", col="3")
+
+lines(as.numeric(data.adj[,16:30][2,c(grep("r1", colnames(data.adj)[16:30]))]), type = "o", col="1", lty=3)
+lines(as.numeric(data.adj[,16:30][2,c(grep("r2", colnames(data.adj)[16:30]))]), type = "o", col="2", lty=3)
+lines(as.numeric(data.adj[,16:30][2,c(grep("r3", colnames(data.adj)[16:30]))]), type = "o", col="3", lty=3)
+
+```
+
+In this case, a simple linear model was sufficient to adjust for the pair effect, but often more complicated (mixed) models may be required to adjust for such effects (e.g. in the presence of other effects/confounding factors). 
+
+RolDE can now be applied in a standard way to analyze the paired data adjusted for the pair effect:
+
+```{r Run RolDE for adjusted paired data, echo=TRUE, eval=FALSE}
+res<-RolDE(data=data.adj, des_matrix=des_matrix3, aligned = T, doPar=T, n_cores=3)
+```
+
+### References
+Elo, Laura, Filen S, Lahesmaa R, et al. Reproducibility-optimized test statistic for ranking genes in microarray studies. IEEE/ACM Trans. Comput. Biol. Bioinform. 2008; 5:423-31.
+
+Suomi T, Seyednasrollah F, Jaakkola MK, et al. ROTS: An R package for reproducibility-optimized statistical testing. PLoS Comput. Biol. 2017; 13:5.
+
+Storey JD, Bass AJ, Dabney A, et al. qvalue: Q-value estimation for false discovery rate control. 2019. 
+
+Välikangas T, Suomi T, ELo LL, et al. Enhanced longitudinal differential expression detection in proteomics with robust reproducibility optimization regression.

@@ -1,0 +1,35 @@
+Package: RolDE
+Title: Robust longitudinal Differential Expression
+Version: 0.0.3.000
+Authors@R: 
+    person(given = "Tommi",
+           family = "Välikangas",
+           role = c("aut", "cre"),
+           email = "tsvali@utu.fi",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Detects longitudinal differential expression between 
+    two conditions in noisy high-troughput data. Suitable even for 
+    data with a moderate amount of missing values.
+Depends: R (>= 3.1.0)
+Imports:
+  stats,
+	ROTS,
+	matrixStats,
+	foreach,
+	parallel,
+	doParallel,
+	nlme,
+	qvalue,
+	grDevices,
+	graphics,
+	knitr,
+	printr,
+	rmarkdown
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: 
+    testthat
+VignetteBuilder: knitr
