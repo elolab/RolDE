@@ -1,9 +1,8 @@
-DiffROTSNonAligned<-function(data, des_matrix, degree_PolyReg, B_for_ROTS, K_for_ROTS, rand_seed, na_treat, n_cores, test_type){
+DiffROTSNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores){
 
   unique_conditions<-unique(as.character(des_matrix[,2]))
 
   #Determine case and control. Control is always the first condition encountered in the design matrix. Need to be changed?
-  #Doesn't really matter, as there is no fold change.
   control<-unique_conditions[1]
   case<-unique_conditions[2]
 
@@ -11,7 +10,7 @@ DiffROTSNonAligned<-function(data, des_matrix, degree_PolyReg, B_for_ROTS, K_for
   d<-NULL
   cl <- parallel::makeCluster(n_cores)
   doParallel::registerDoParallel(cl)
-  rots_frame <- foreach::foreach(d=0:degree_PolyReg, .packages = c("ROTS", "foreach"), .combine=cbind) %dopar% {
+  rots_frame <- foreach::foreach(d=0:degree_PolyReg, .packages = c("ROTS", "foreach"), .combine=cbind) %dorng% {
 
     resid_frame<-matrix(nrow = nrow(data), ncol = ncol(data))
     rownames(resid_frame)<-rownames(data)
@@ -20,35 +19,33 @@ DiffROTSNonAligned<-function(data, des_matrix, degree_PolyReg, B_for_ROTS, K_for
     for(r in 1:nrow(data)){
 
       temp_data<-matrix(nrow = nrow(des_matrix), ncol = 4)
-      temp_data<-data.frame(temp_data, stringsAsFactors = F)
+      temp_data<-data.frame(temp_data, stringsAsFactors = FALSE)
 
-      colnames(temp_data)<-c("Intensity", "Time", "Condition", "Block")
+      colnames(temp_data)<-c("Intensity", "Time", "Condition", "Individual")
       temp_data[,1]<-as.numeric(as.character(data[r,]))
       temp_data[,2]<-as.numeric(as.character(des_matrix$Timepoint))
       temp_data[,3]<-as.factor(des_matrix$Condition)
-      temp_data[,4]<-as.factor(as.numeric(as.character(des_matrix$Block)))
+      temp_data[,4]<-as.factor(as.numeric(as.character(des_matrix$Individual)))
       rownames(temp_data)<-colnames(data)
 
-      if(test_type=="unpaired"){
-        if(d==0){ #intercept only model
-          mod1<-tryCatch({
-            lm(Intensity~1, data=temp_data)
-          },error = function(e) {
-            NULL
-          })
-        }else if(d==1){
-          mod1<-tryCatch({
-            lm(Intensity~Time, data=temp_data)
-          },error = function(e) {
-            NULL
-          })
-        }else {
-          mod1<-tryCatch({
-            lm(Intensity~poly(Time,degree_PolyReg), data=temp_data)
-          },error = function(e) {
-            NULL
-          })
-        }
+      if(d==0){ #intercept only model
+        mod1<-tryCatch({
+          lm(Intensity~1, data=temp_data)
+        },error = function(e) {
+          NULL
+        })
+      }else if(d==1){
+        mod1<-tryCatch({
+          lm(Intensity~Time, data=temp_data)
+        },error = function(e) {
+          NULL
+        })
+      }else {
+        mod1<-tryCatch({
+          lm(Intensity~poly(Time,d), data=temp_data)
+        },error = function(e) {
+          NULL
+        })
       }
       if(!is.null(mod1)){
         resid=mod1$residuals
@@ -70,13 +67,7 @@ DiffROTSNonAligned<-function(data, des_matrix, degree_PolyReg, B_for_ROTS, K_for
       resid_frame=resid_frame[-rems,]
     }
 
-    if(K_for_ROTS=="auto"){
-      used_K_for_ROTS<-nrow(resid_frame)/4
-    } else{
-      used_K_for_ROTS<-K_for_ROTS
-    }
-
-    suppressMessages(expr = {rots_out<-ROTS::ROTS(data = resid_frame, groups = groups_for_rots, B = B_for_ROTS, K = used_K_for_ROTS, paired = F, seed = rand_seed, progress = F)})
+    suppressMessages(expr = {rots_out<-ROTS::ROTS(data = resid_frame, groups = groups_for_rots, B = 100, K = nrow(resid_frame)/4, paired = FALSE, progress = FALSE)})
     rots_res=data.frame(d=rots_out$d, p=rots_out$pvalue)
 
     res_mat<-matrix(nrow = nrow(data), ncol = 1)
@@ -90,12 +81,12 @@ DiffROTSNonAligned<-function(data, des_matrix, degree_PolyReg, B_for_ROTS, K_for
   colnames(rots_frame)=c(0, seq(1:degree_PolyReg))
 
   #Combine the result from different degrees
-  combin_fun<-"min" #minimum the default. Should alternatives be allowed? Rank product? Not allowed right now.
+  combin_fun<-"min" #minimum the default. Should alternatives be allowed? Not allowed right now.
   c_func<-get(combin_fun) #minimum now
-  fin_p<-apply(rots_frame, 1, function(x) c_func(x, na.rm = T))
+  fin_p<-suppressWarnings(apply(rots_frame, 1, function(x) c_func(x, na.rm = TRUE)))
   fin_p[is.infinite(fin_p)]<-NA
   fin_res<-cbind(id=names(fin_p), p=as.numeric(fin_p))
-  fin_res<-data.frame(fin_res, stringsAsFactors = F)
+  fin_res<-data.frame(fin_res, stringsAsFactors = FALSE)
   rownames(fin_res)<-rownames(data)
   colnames(fin_res)<-c("id","rep p-value")
   fin_res[,1]<-as.character(fin_res[,1])

@@ -3,6 +3,7 @@
 #to help with foreach
 `%dopar%` <- foreach::`%dopar%`
 `%do%` <- foreach::`%do%`
+`%dorng%` <- doRNG::`%dorng%`
 
 #shifter helper function
 shifter <- function(x, n = 1) {
@@ -12,7 +13,7 @@ shifter <- function(x, n = 1) {
 #A Function to divide the individual into ROTS runs to preserve the proper degrees of
 #freedom for statistical testing, i.e. so that each individual is used only once
 #in each run. Make the sizes of the runs as balanced as possible.
-getUniqueCombRunsNew<-function(real_combs, unique_conditions){ #Still corrected 23.9.2020
+getUniqueCombRunsNew<-function(real_combs, unique_conditions){
   test_mat<-matrix(nrow = length(real_combs), ncol=2)
   for(i in 1:nrow(test_mat)){
     temp<-as.numeric(unlist(strsplit(real_combs[i], ",")[[1]]))
@@ -50,7 +51,7 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){ #Still corrected 
   }
 
   all_lengths<-c(lengths1, lengths2)
-  all_lengths<-sort(all_lengths, decreasing = T)
+  all_lengths<-sort(all_lengths, decreasing = TRUE)
 
   start_ind<-1
 
@@ -70,7 +71,7 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){ #Still corrected 
         if(ncol(temp_mat)==0){next}
         for(co in 1:ncol(temp_mat)){
           if(all(ind_mat[j,]==temp_mat[,co]))
-            found[j]=T
+            found[j]=TRUE
         }
       }
     }
@@ -135,14 +136,13 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){ #Still corrected 
 
 #Function to fill in missing values, only fill if a row has less than 2 missing values per group.
 #Do not impute more than two values per group for a row.
-fillGaps_New<-function(all_quant_vals, row, groups_for_rots, rand_seed){
+fillGaps_New<-function(all_quant_vals, row, groups_for_rots){
   for(group in 1:max(groups_for_rots)){
     locs_na<-which(is.na(row[which(groups_for_rots==group)]))
     locs_nonna<-which(!is.na(row[which(groups_for_rots==group)]))
     if(length(locs_nonna)<2){
       imp.num<-2-length(locs_nonna)
-      #set.seed(rand_seed)
-      vals<-sample(1:1000, length(imp.num), replace = T)
+      vals<-sample(1:1000, length(imp.num), replace = TRUE)
       vals<-all_quant_vals[vals]
       row[which(groups_for_rots==group)][locs_na][1:imp.num]<-vals
     }
@@ -151,10 +151,9 @@ fillGaps_New<-function(all_quant_vals, row, groups_for_rots, rand_seed){
 }
 
 #Fill in all gaps in in a row.
-fillGapsAll_New<-function(all_quant_vals, row, rand_seed){
+fillGapsAll_New<-function(all_quant_vals, row){
   locs_na<-which(is.na(row))
-  set.seed(rand_seed)
-  vals<-sample(1:1000, length(locs_na), replace = T)
+  vals<-sample(1:1000, length(locs_na), replace = TRUE)
   vals<-all_quant_vals[vals]
   row[locs_na]=vals
   return(row)
@@ -169,7 +168,7 @@ getRank<-function(p,s){
   if(is.na(s)){
     sr<-NA
   }else{
-    loc<-which(abs(p - s) == min(abs(p - s), na.rm = T))
+    loc<-which(abs(p - s) == min(abs(p - s), na.rm = TRUE))
     sr<-as.numeric(names(p)[loc])
     if(length(sr)>1){
       sr=sample(c(sr),1)
@@ -178,261 +177,125 @@ getRank<-function(p,s){
   return(sr)
 }
 
-#Get simulated internal rank products for RegROTS, DiffROTS
-getSimRPs<-function(pvals, sim_p, rand_seed, na_treat){
-  pvals=rbind(seq(1:ncol(pvals)), pvals)
-  est_ranks<-apply(pvals, 2, function(x){
-    us.seed=rand_seed+as.numeric(x[1])
-    x=x[-1]
-    set.seed(us.seed)
-    locs_non_na<-which(!is.na(x))
-    sim_sample<-sample(x = sim_p, size = length(locs_non_na), replace = T)
-    rank_org<-rank(x, na.last = T, ties.method = "random")
-    names(x)<-rank_org
-    sim_sample<-sort(sim_sample)
-    sim_sample<-sim_sample[rank_org]
-    sr<-as.numeric(unlist(lapply(sim_sample, function(y) getRank(p = x, s = y))))
-    if(na_treat=="last"){ #add ranks for NA values, else keep them as such
-      locs_na<-which(is.na(x))
-      if(length(locs_na)>0){
-        max_sr<-max(sr[-locs_na], na.rm = T)
-        sr[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-      }
-    }
-    return(sr)
-  })
-  #sim_rp=apply(est_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
-  sim_rp=exp(rowMeans(log(est_ranks), na.rm = T))
-  if(any(is.nan(sim_rp))){sim_rp[which(is.nan(sim_rp))]=NA}
-  return(sim_rp)
-}
 #Get simulated internal rank products for RegROTS, DiffROTS with weights
-getSimRPsWeights<-function(pvals, sim_p, rand_seed, na_treat, weights){
-  pvals=rbind(seq(1:ncol(pvals)), pvals)
+getSimRPsWeights<-function(pvals, sim_p, weights){
   est_ranks<-apply(pvals, 2, function(x){
-    us.seed=rand_seed+as.numeric(x[1])
-    x=x[-1]
-    set.seed(us.seed)
     locs_non_na<-which(!is.na(x))
-    sim_sample<-sample(x = sim_p, size = length(locs_non_na), replace = T)
-    rank_org<-rank(x, na.last = T, ties.method = "random")
+    sim_sample<-sample(x = sim_p, size = length(locs_non_na), replace = TRUE)
+    rank_org<-rank(x, na.last = TRUE, ties.method = "random")
     names(x)<-rank_org
     sim_sample<-sort(sim_sample)
     sim_sample<-sim_sample[rank_org]
     sr<-as.numeric(unlist(lapply(sim_sample, function(y) getRank(p = x, s = y))))
-    if(na_treat=="last"){ #add ranks for NA values, else keep them as such
-      locs_na<-which(is.na(x))
-      if(length(locs_na)>0){
-        max_sr<-max(sr[-locs_na], na.rm = T)
-        sr[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-      }
+    locs_na<-which(is.na(x))
+    if(length(locs_na)>0){
+      max_sr<-max(sr[-locs_na], na.rm = TRUE)
+      sr[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
     }
     return(sr)
   })
   #sim_rp=apply(est_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
-  sim_rp=exp(matrixStats::rowWeightedMeans(x=log(est_ranks),w = weights,  na.rm = T))
+  sim_rp=exp(matrixStats::rowWeightedMeans(x=log(est_ranks),w = weights,  na.rm = TRUE))
   if(any(is.nan(sim_rp))){sim_rp[which(is.nan(sim_rp))]=NA}
   return(sim_rp)
 }
 
 #Get Simulated P-values for non aligned timepoint DiffROTS
-getSimPDif<-function(pvals, sim_p, rand_seed, na_treat){
-  pvals=rbind(seq(1:ncol(pvals)), pvals)
+getSimPDif<-function(pvals, sim_p){
   est_pvals<-apply(pvals, 2, function(x){
-    us.seed=rand_seed+as.numeric(x[1])
-    x=x[-1]
-    set.seed(us.seed)
     locs_non_na<-which(!is.na(x))
-    sim_sample<-sample(x = sim_p, size = length(locs_non_na), replace = T)
-    rank_org<-rank(x, na.last = T, ties.method = "random")
+    sim_sample<-sample(x = sim_p, size = length(locs_non_na), replace = TRUE)
+    rank_org<-rank(x, na.last = TRUE, ties.method = "random")
     names(x)<-rank_org
     sim_sample<-sort(sim_sample)
     sim_sample<-sim_sample[rank_org]
     })
-  sim_pval=apply(est_pvals,1,min,na.rm=T) #now built for minimum, if alternatives will be provided, this needs to be updated as well. CHECK!
+  sim_pval=apply(est_pvals,1,min,na.rm=TRUE) #now built for minimum.
   if(any(is.infinite(sim_pval))){sim_pval[which(is.infinite(sim_pval))]=NA}
   return(sim_pval)
 }
 
 #Get Simulated P-values for PolyReg
-getSPPoly<-function(all_p_vals, sim_p, ord_poly, all_cond_pvals, rand_seed){
-  set.seed(rand_seed)
-  est_p<-sample(x = sim_p, size = length(na.omit(all_p_vals)), replace = T)
+getSPPoly<-function(all_p_vals, sim_p, ord_poly, all_cond_pvals){
+  est_p<-sample(x = sim_p, size = length(na.omit(all_p_vals)), replace = TRUE)
   est_p<-sort(est_p)
   est_p<-est_p[ord_poly] #If there are NAs, they get put back in at the right indexes
   #if(any(is.na(all_p_vals))){est_p[which(is.na(all_p_vals))]=NA}
   all_p_sim<-matrix(est_p,nrow = nrow(all_cond_pvals),ncol = ncol(all_cond_pvals))
-  p_sim<-apply(all_p_sim, 1, min, na.rm=T)
+  p_sim<-apply(all_p_sim, 1, min, na.rm=TRUE)
   if(any(is.infinite(p_sim))){p_sim[which(is.infinite(p_sim))]=NA}
   return(p_sim)
 }
 
-#Get simulated overall Rank products.
-getSimRankProds<-function(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, rp_diff, p_poly, rand_seed, na_treat, sigValSampN){
-
-  #always repeatable seeds, but different for each individual sample.
-  seed1<-rand_seed
-  seed2<-rand_seed+(sigValSampN+1)
-  seed3<-rand_seed+((sigValSampN*2)+1)
-
-  sim_rp_reg<-getSimRPs(pvals = reg_rots_pval, sim_p = sim_p, rand_seed = seed1, na_treat = na_treat)
-  sim_rp_diff<-getSimRPs(pvals = diff_rots_pval, sim_p = sim_p, rand_seed = seed2, na_treat = na_treat)
-
-  sim_p_poly<-getSPPoly(all_p_vals = all_poly_pvals, sim_p = sim_p, ord_poly = ord_poly, all_cond_pvals = polyreg_pval, seed3)
-
-  sim_r1<-as.numeric(unlist(lapply(sim_rp_reg, function(x) getRank(p = rp_reg, s = x))))
-  sim_r2<-as.numeric(unlist(lapply(sim_rp_diff, function(x) getRank(p = rp_diff, s = x))))
-  sim_r3<-as.numeric(unlist(lapply(sim_p_poly, function(x) getRank(p = p_poly, s = x))))
-
-  if(na_treat=="last"){ #add ranks for NA values, else keep them as such
-    locs_na<-which(is.na(sim_r1))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r1[-locs_na], na.rm = T)
-      sim_r1[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
-
-    locs_na<-which(is.na(sim_r2))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r2[-locs_na], na.rm = T)
-      sim_r2[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
-
-    locs_na<-which(is.na(sim_r3))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r3[-locs_na], na.rm = T)
-      sim_r3[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
-  }
-
-  sim_ranks=cbind(sim_r1, sim_r2, sim_r3)
- # sim_rank_prods<-apply(sim_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
-  sim_rank_prods<-exp(rowMeans(log(sim_ranks), na.rm = T))
-}
 
 #Get simulated overall Rank products when weighing the runs.
-getSimRankProdsWeights<-function(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, rp_diff, p_poly, rand_seed, na_treat, regrots_weigths, diffrots_weigths, sigValSampN){
+getSimRankProdsWeights<-function(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, rp_diff, p_poly, regrots_weigths, diffrots_weigths, sigValSampN){
 
-  #always repeatable seeds, but different for each individual sample.
-  seed1<-rand_seed
-  seed2<-rand_seed+(sigValSampN+1)
-  seed3<-rand_seed+((sigValSampN*2)+1)
+  sim_rp_reg<-getSimRPsWeights(pvals = reg_rots_pval, sim_p = sim_p, weights = regrots_weigths)
+  sim_rp_diff<-getSimRPsWeights(pvals = diff_rots_pval, sim_p = sim_p, weights = diffrots_weigths)
 
-  sim_rp_reg<-getSimRPsWeights(pvals = reg_rots_pval, sim_p = sim_p, rand_seed = seed1, na_treat = na_treat, weights = regrots_weigths)
-  sim_rp_diff<-getSimRPsWeights(pvals = diff_rots_pval, sim_p = sim_p, rand_seed = seed2, na_treat = na_treat, weights = diffrots_weigths)
-
-  sim_p_poly<-getSPPoly(all_p_vals = all_poly_pvals, sim_p = sim_p, ord_poly = ord_poly, all_cond_pvals = polyreg_pval, seed3)
+  sim_p_poly<-getSPPoly(all_p_vals = all_poly_pvals, sim_p = sim_p, ord_poly = ord_poly, all_cond_pvals = polyreg_pval)
 
   sim_r1<-as.numeric(unlist(lapply(sim_rp_reg, function(x) getRank(p = rp_reg, s = x))))
   sim_r2<-as.numeric(unlist(lapply(sim_rp_diff, function(x) getRank(p = rp_diff, s = x))))
   sim_r3<-as.numeric(unlist(lapply(sim_p_poly, function(x) getRank(p = p_poly, s = x))))
 
-  if(na_treat=="last"){ #add ranks for NA values, else keep them as such
-    locs_na<-which(is.na(sim_r1))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r1[-locs_na], na.rm = T)
-      sim_r1[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
+  locs_na<-which(is.na(sim_r1))
+  if(length(locs_na)>0){
+    max_sr<-max(sim_r1[-locs_na], na.rm = TRUE)
+    sim_r1[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+  }
 
-    locs_na<-which(is.na(sim_r2))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r2[-locs_na], na.rm = T)
-      sim_r2[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
+  locs_na<-which(is.na(sim_r2))
+  if(length(locs_na)>0){
+    max_sr<-max(sim_r2[-locs_na], na.rm = TRUE)
+    sim_r2[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+  }
 
-    locs_na<-which(is.na(sim_r3))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r3[-locs_na], na.rm = T)
-      sim_r3[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
+  locs_na<-which(is.na(sim_r3))
+  if(length(locs_na)>0){
+    max_sr<-max(sim_r3[-locs_na], na.rm = TRUE)
+    sim_r3[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
   }
 
   sim_ranks=cbind(sim_r1, sim_r2, sim_r3)
   # sim_rank_prods<-apply(sim_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
-  sim_rank_prods<-exp(rowMeans(log(sim_ranks), na.rm = T))
-}
-
-#Get simulated rank products in non-aligned timepoint data.
-getSimRankProdsNonAligned<-function(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, p_diff, p_poly, rand_seed, na_treat, sigValSampN){
-
-  #always repeatable seeds, but different for each individual sample.
-  seed1<-rand_seed
-  seed2<-rand_seed+(sigValSampN+1)
-  seed3<-rand_seed+((sigValSampN*2)+1)
-
-  sim_rp_reg<-getSimRPs(pvals = reg_rots_pval, sim_p = sim_p, rand_seed = seed1, na_treat = na_treat)
-  sim_p_diff<-getSimPDif(pvals = diff_rots_pval, sim_p = sim_p, rand_seed = seed2, na_treat = na_treat)
-
-  sim_p_poly<-getSPPoly(all_p_vals = all_poly_pvals, sim_p = sim_p, ord_poly = ord_poly, all_cond_pvals = polyreg_pval, seed3)
-
-  sim_r1<-as.numeric(unlist(lapply(sim_rp_reg, function(x) getRank(p = rp_reg, s = x))))
-  sim_r2<-as.numeric(unlist(lapply(sim_p_diff, function(x) getRank(p = p_diff, s = x))))
-  sim_r3<-as.numeric(unlist(lapply(sim_p_poly, function(x) getRank(p = p_poly, s = x))))
-
-  if(na_treat=="last"){ #add ranks for NA values, else keep them as such
-    locs_na<-which(is.na(sim_r1))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r1[-locs_na], na.rm = T)
-      sim_r1[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
-
-    locs_na<-which(is.na(sim_r2))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r2[-locs_na], na.rm = T)
-      sim_r2[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
-
-    locs_na<-which(is.na(sim_r3))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r3[-locs_na], na.rm = T)
-      sim_r3[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
-  }
-
-  sim_ranks=cbind(sim_r1, sim_r2, sim_r3)
-  # sim_rank_prods<-apply(sim_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
-  sim_rank_prods<-exp(rowMeans(log(sim_ranks), na.rm = T))
+  sim_rank_prods<-exp(rowMeans(log(sim_ranks), na.rm = TRUE))
 }
 
 #Get simulated rank products in non-aligned timepoint data with weights.
-getSimRankProdsNonAlignedWeights<-function(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, p_diff, p_poly, rand_seed, na_treat, regrots_weigths, sigValSampN){
+getSimRankProdsNonAlignedWeights<-function(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, p_diff, p_poly, regrots_weigths, sigValSampN){
 
-  #always repeatable seeds, but different for each individual sample.
-  seed1<-rand_seed
-  seed2<-rand_seed+(sigValSampN+1)
-  seed3<-rand_seed+((sigValSampN*2)+1)
+  sim_rp_reg<-getSimRPsWeights(pvals = reg_rots_pval, sim_p = sim_p, weights = regrots_weigths)
+  sim_p_diff<-getSimPDif(pvals = diff_rots_pval, sim_p = sim_p)
 
-  sim_rp_reg<-getSimRPsWeights(pvals = reg_rots_pval, sim_p = sim_p, rand_seed = seed1, na_treat = na_treat, weights = regrots_weigths)
-  sim_p_diff<-getSimPDif(pvals = diff_rots_pval, sim_p = sim_p, rand_seed = seed2, na_treat = na_treat)
-
-  sim_p_poly<-getSPPoly(all_p_vals = all_poly_pvals, sim_p = sim_p, ord_poly = ord_poly, all_cond_pvals = polyreg_pval, seed3)
+  sim_p_poly<-getSPPoly(all_p_vals = all_poly_pvals, sim_p = sim_p, ord_poly = ord_poly, all_cond_pvals = polyreg_pval)
 
   sim_r1<-as.numeric(unlist(lapply(sim_rp_reg, function(x) getRank(p = rp_reg, s = x))))
   sim_r2<-as.numeric(unlist(lapply(sim_p_diff, function(x) getRank(p = p_diff, s = x))))
   sim_r3<-as.numeric(unlist(lapply(sim_p_poly, function(x) getRank(p = p_poly, s = x))))
 
-  if(na_treat=="last"){ #add ranks for NA values, else keep them as such
-    locs_na<-which(is.na(sim_r1))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r1[-locs_na], na.rm = T)
-      sim_r1[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
+  locs_na<-which(is.na(sim_r1))
+  if(length(locs_na)>0){
+    max_sr<-max(sim_r1[-locs_na], na.rm = TRUE)
+    sim_r1[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+  }
 
-    locs_na<-which(is.na(sim_r2))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r2[-locs_na], na.rm = T)
-      sim_r2[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
+  locs_na<-which(is.na(sim_r2))
+  if(length(locs_na)>0){
+    max_sr<-max(sim_r2[-locs_na], na.rm = TRUE)
+    sim_r2[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+  }
 
-    locs_na<-which(is.na(sim_r3))
-    if(length(locs_na)>0){
-      max_sr<-max(sim_r3[-locs_na], na.rm = T)
-      sim_r3[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
-    }
+  locs_na<-which(is.na(sim_r3))
+  if(length(locs_na)>0){
+    max_sr<-max(sim_r3[-locs_na], na.rm = TRUE)
+    sim_r3[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
   }
 
   sim_ranks=cbind(sim_r1, sim_r2, sim_r3)
   # sim_rank_prods<-apply(sim_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
-  sim_rank_prods<-exp(rowMeans(log(sim_ranks), na.rm = T))
+  sim_rank_prods<-exp(rowMeans(log(sim_ranks), na.rm = TRUE))
 }
 
 #Get length of common timeinterval for two time lines.

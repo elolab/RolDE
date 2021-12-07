@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Introduction to the Robust longitudinal Differential Expression (RolDE) method</title>
+
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction to the Robust longitudinal Differential Expression (RolDE) method</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(RolDE)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="co">#&gt; Registered S3 method overwritten by &#39;printr&#39;:</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#&gt;   method                from     </span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="co">#&gt;   knit_print.data.frame rmarkdown</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="kw">library</span>(printr)</span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="co">#&gt; Warning: package &#39;printr&#39; was built under R version 3.6.3</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="kw">library</span>(knitr)</span></code></pre></div>
+<div id="introduction" class="section level3">
+<h3>Introduction</h3>
+<p>RolDE is a composite method, consisting of three independent modules with different approaches to detecting differential expression. The combination of these diverse modules allows RolDE to robustly detect varying differences in longitudinal trends and expression levels in diverse data types and experimental settings.</p>
+<p>The RegROTS module merges the power of regression modelling with the power of the established differential expression method Reproducibility Optimized Test Statistic (ROTS) (Elo et al., Suomi et al.). A polynomial regression model of protein expression over time is fitted separately for each replicate (individual) in each condition. Differential expression between two replicates (individuals) in different conditions is examined by comparing the coefficients of the replicate-specific regression models. If all coefficient differences are zero, no longitudinal differential expression between the two replicates in different conditions exist. For a through exploration of differential expression between the conditions, all possible combinations of replicates in different conditions are examined.</p>
+<p>In the DiffROTS module the expression of replicates in different conditions are directly compared at all time points. Again, if the expression level differences at all time points are zero, no differential expression between the examined replicates in different conditions exist. Similarly to the RegROTS module, differential expression is examined between all possible combinations of replicates in the different conditions. In non-aligned time point data, the expression level differences between the conditions is examined when accounting for time-associated trends of varying complexity in the data. More specifically, the expression level differences between the conditions are examined when adjusting for increasingly complex time-related expression trends of polynomial degrees d=0,1,.,d where d is the maximum degree for the polynomial and the same degree as is used for the PolyReg module.</p>
+<p>In the PolyReg module, polynomial regression modelling is used to detect longitudinal differential expression. Condition is included as a categorical factor within the models and by investigating the condition related intercept and differences in time-related polynomial slopes at different leves of the condition factor, average group level and time related differences in longitudinal expression between the conditions can be examined.</p>
+<p>Finally, to conclusively detect any differential expression, the findings from the different modules are combined using the rank product. For more details about the method, see the original RolDE publication (Valikangas et al.).</p>
+</div>
+<div id="applying-rolde-in-example-datasets-with-aligned-time-points" class="section level3">
+<h3>Applying RolDE in example datasets with aligned time points</h3>
+<p>First, load the dataset and the design matrix to be used:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">data</span>(data1)</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">data</span>(<span class="st">&quot;des_matrix1&quot;</span>)</span></code></pre></div>
+<p>To understand the structure of the design matrix and what a design matrix for RolDE should look like, let’s explore the data and the design matrix:</p>
+<p>Dimensions of the data:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">dim</span>(data1)</span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="co">#&gt; [1] 1045   30</span></span></code></pre></div>
+<p>Column names of the data:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">head</span>(<span class="kw">colnames</span>(data1))</span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="co">#&gt; [1] &quot;Condition1_timepoint_1_Sample_1_r1&quot; &quot;Condition1_timepoint_1_Sample_1_r2&quot;</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="co">#&gt; [3] &quot;Condition1_timepoint_1_Sample_1_r3&quot; &quot;Condition1_timepoint_2_Sample_2_r1&quot;</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a><span class="co">#&gt; [5] &quot;Condition1_timepoint_2_Sample_2_r2&quot; &quot;Condition1_timepoint_2_Sample_2_r3&quot;</span></span></code></pre></div>
+<p>Dimensions of the design matrix:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">dim</span>(des_matrix1)</span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="co">#&gt; [1] 30  4</span></span></code></pre></div>
+<p>Column names of the design matrix:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">colnames</span>(des_matrix1)</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt; [1] &quot;Sample Names&quot;         &quot;Condition&quot;            &quot;Time point&quot;          </span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt; [4] &quot;Replicate/Individual&quot;</span></span></code></pre></div>
+<p>Contents of the design matrix:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">head</span>(des_matrix1)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Sample Names</th>
+<th align="left">Condition</th>
+<th align="left">Time point</th>
+<th align="left">Replicate/Individual</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Condition1_timepoint_1_Sample_1_r1</td>
+<td align="left">Condition1</td>
+<td align="left">1</td>
+<td align="left">1</td>
+</tr>
+<tr class="even">
+<td align="left">Condition1_timepoint_1_Sample_1_r2</td>
+<td align="left">Condition1</td>
+<td align="left">1</td>
+<td align="left">2</td>
+</tr>
+<tr class="odd">
+<td align="left">Condition1_timepoint_1_Sample_1_r3</td>
+<td align="left">Condition1</td>
+<td align="left">1</td>
+<td align="left">3</td>
+</tr>
+<tr class="even">
+<td align="left">Condition1_timepoint_2_Sample_2_r1</td>
+<td align="left">Condition1</td>
+<td align="left">2</td>
+<td align="left">1</td>
+</tr>
+<tr class="odd">
+<td align="left">Condition1_timepoint_2_Sample_2_r2</td>
+<td align="left">Condition1</td>
+<td align="left">2</td>
+<td align="left">2</td>
+</tr>
+<tr class="even">
+<td align="left">Condition1_timepoint_2_Sample_2_r3</td>
+<td align="left">Condition1</td>
+<td align="left">2</td>
+<td align="left">3</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">tail</span>(des_matrix1)</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Sample Names</th>
+<th align="left">Condition</th>
+<th align="left">Time point</th>
+<th align="left">Replicate/Individual</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">[25,]</td>
+<td align="left">Condition2_timepoint_4_Sample_4_r1</td>
+<td align="left">Condition2</td>
+<td align="left">4</td>
+<td align="left">4</td>
+</tr>
+<tr class="even">
+<td align="left">[26,]</td>
+<td align="left">Condition2_timepoint_4_Sample_4_r2</td>
+<td align="left">Condition2</td>
+<td align="left">4</td>
+<td align="left">5</td>
+</tr>
+<tr class="odd">
+<td align="left">[27,]</td>
+<td align="left">Condition2_timepoint_4_Sample_4_r3</td>
+<td align="left">Condition2</td>
+<td align="left">4</td>
+<td align="left">6</td>
+</tr>
+<tr class="even">
+<td align="left">[28,]</td>
+<td align="left">Condition2_timepoint_5_Sample_5_r1</td>
+<td align="left">Condition2</td>
+<td align="left">5</td>
+<td align="left">4</td>
+</tr>
+<tr class="odd">
+<td align="left">[29,]</td>
+<td align="left">Condition2_timepoint_5_Sample_5_r2</td>
+<td align="left">Condition2</td>
+<td align="left">5</td>
+<td align="left">5</td>
+</tr>
+<tr class="even">
+<td align="left">[30,]</td>
+<td align="left">Condition2_timepoint_5_Sample_5_r3</td>
+<td align="left">Condition2</td>
+<td align="left">5</td>
+<td align="left">6</td>
+</tr>
+</tbody>
+</table>
+<p>The first column of the design matrix should contain the sample names of the data (column names of the data). The second column should indicate the condition/group factor status for each sample to be explored (e.g. sick/healthy, control/case). The third column should indicate the time point for each sample (data with aligned time points) or time value (or equivalent, e.g. age, temperature, disease progression) information in data with non-aligned time points. The fourth and final column of the design matrix should indicate the replicate / individual each sample came from. Let’s look at the exemplary design matrix a little bit more:</p>
+<p>Unique samples:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="kw">unique</span>(des_matrix1[,<span class="dv">1</span>])</span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="co">#&gt;  [1] &quot;Condition1_timepoint_1_Sample_1_r1&quot; &quot;Condition1_timepoint_1_Sample_1_r2&quot;</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="co">#&gt;  [3] &quot;Condition1_timepoint_1_Sample_1_r3&quot; &quot;Condition1_timepoint_2_Sample_2_r1&quot;</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="co">#&gt;  [5] &quot;Condition1_timepoint_2_Sample_2_r2&quot; &quot;Condition1_timepoint_2_Sample_2_r3&quot;</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="co">#&gt;  [7] &quot;Condition1_timepoint_3_Sample_3_r1&quot; &quot;Condition1_timepoint_3_Sample_3_r2&quot;</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="co">#&gt;  [9] &quot;Condition1_timepoint_3_Sample_3_r3&quot; &quot;Condition1_timepoint_4_Sample_4_r1&quot;</span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="co">#&gt; [11] &quot;Condition1_timepoint_4_Sample_4_r2&quot; &quot;Condition1_timepoint_4_Sample_4_r3&quot;</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="co">#&gt; [13] &quot;Condition1_timepoint_5_Sample_5_r1&quot; &quot;Condition1_timepoint_5_Sample_5_r2&quot;</span></span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co">#&gt; [15] &quot;Condition1_timepoint_5_Sample_5_r3&quot; &quot;Condition2_timepoint_1_Sample_1_r1&quot;</span></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="co">#&gt; [17] &quot;Condition2_timepoint_1_Sample_1_r2&quot; &quot;Condition2_timepoint_1_Sample_1_r3&quot;</span></span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#&gt; [19] &quot;Condition2_timepoint_2_Sample_2_r1&quot; &quot;Condition2_timepoint_2_Sample_2_r2&quot;</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="co">#&gt; [21] &quot;Condition2_timepoint_2_Sample_2_r3&quot; &quot;Condition2_timepoint_3_Sample_3_r1&quot;</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="co">#&gt; [23] &quot;Condition2_timepoint_3_Sample_3_r2&quot; &quot;Condition2_timepoint_3_Sample_3_r3&quot;</span></span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="co">#&gt; [25] &quot;Condition2_timepoint_4_Sample_4_r1&quot; &quot;Condition2_timepoint_4_Sample_4_r2&quot;</span></span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="co">#&gt; [27] &quot;Condition2_timepoint_4_Sample_4_r3&quot; &quot;Condition2_timepoint_5_Sample_5_r1&quot;</span></span>
+<span id="cb9-16"><a href="#cb9-16"></a><span class="co">#&gt; [29] &quot;Condition2_timepoint_5_Sample_5_r2&quot; &quot;Condition2_timepoint_5_Sample_5_r3&quot;</span></span></code></pre></div>
+<p>Conditions:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="kw">unique</span>(des_matrix1[,<span class="dv">2</span>])</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="co">#&gt; [1] &quot;Condition1&quot; &quot;Condition2&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="kw">table</span>(des_matrix1[,<span class="dv">2</span>])</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Condition1</th>
+<th align="right">Condition2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">15</td>
+<td align="right">15</td>
+</tr>
+</tbody>
+</table>
+<p>Time points:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">unique</span>(des_matrix1[,<span class="dv">3</span>])</span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="co">#&gt; [1] &quot;1&quot; &quot;2&quot; &quot;3&quot; &quot;4&quot; &quot;5&quot;</span></span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="kw">table</span>(des_matrix1[,<span class="dv">3</span>])</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">6</td>
+<td align="right">6</td>
+<td align="right">6</td>
+<td align="right">6</td>
+</tr>
+</tbody>
+</table>
+<p>Replicates:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="kw">unique</span>(des_matrix1[,<span class="dv">4</span>])</span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#&gt; [1] &quot;1&quot; &quot;2&quot; &quot;3&quot; &quot;4&quot; &quot;5&quot; &quot;6&quot;</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="kw">table</span>(des_matrix1[,<span class="dv">4</span>])</span></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th align="right">1</th>
+<th align="right">2</th>
+<th align="right">3</th>
+<th align="right">4</th>
+<th align="right">5</th>
+<th align="right">6</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">5</td>
+<td align="right">5</td>
+</tr>
+</tbody>
+</table>
+<p>In this example, we have a dataset of 30 samples, 2 conditions, 6 replicates each with 5 time points. The timepoints in the data are aligned.</p>
+<p>This is how a design matrix for a dataset for RolDE should look like. This gives all the essential information for RolDE it needs to determine longitudinal differential expression between the conditions.</p>
+<p>By bare minimum, RolDE needs the data and the design matrix. By default RolDE assumes that the time points in the data are aligned. If not defined otherwise, RolDE will by default use sequential processing. However, using parallel processing and multiple threads will greatly reduce the computational time required by RolDE.</p>
+<p>Running RolDE using parallel processing and 3 threads:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>data1.res&lt;-<span class="kw">RolDE</span>(<span class="dt">data=</span>data1, <span class="dt">des_matrix=</span>des_matrix1, <span class="dt">n_cores=</span><span class="dv">3</span>)</span></code></pre></div>
+<p>The results of RolDE are returned in a list with lot of information:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">names</span>(data1.res)</span>
+<span id="cb14-2"><a href="#cb14-2"></a><span class="co">#&gt;  [1] &quot;RolDE_Results&quot;     &quot;RegROTS_Results&quot;   &quot;RegROTS_P_Values&quot; </span></span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="co">#&gt;  [4] &quot;DiffROTS_Results&quot;  &quot;DiffROTS_P_Values&quot; &quot;PolyReg_Results&quot;  </span></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="co">#&gt;  [7] &quot;PolyReg_P_Values&quot;  &quot;ROTS_Runs&quot;         &quot;Method_Degrees&quot;   </span></span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="co">#&gt; [10] &quot;Input&quot;</span></span></code></pre></div>
+<p>The main results of RolDE are located in the first element of the provided result list. Elements 2,4 and 6 provide the result for the different modules of RolDE separately (the RegROTS, DiffROTS and PolyReg modules).</p>
+<p>Elements 3 and 5 provide the significance values for the different ROTS runs of the RegROTS and DiffROTS modules, respectively. The used ROTS runs within those modules are given in element 8. The comparison between replicates in different conditions are divided into the different runs so that each sample is used only once within each run to preserve the proper degrees of freedom for statistical testing.</p>
+<p>All the condition related significance values of the polynomial regression models in the PolyReg module are given in element 7. The used polynomial degrees for the regression models in the RegROTS and the PolyReg modules are given in element 9. And in element 10, all the inputs used by RolDE (both given by the user and those determined automatically by the method) are given.</p>
+<p>Typically, the main (only) interest of the user is in element 1, where the main results of RolDE are given:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>RolDE.data1&lt;-data1.res<span class="op">$</span>RolDE_Results</span>
+<span id="cb15-2"><a href="#cb15-2"></a><span class="kw">dim</span>(RolDE.data1)</span>
+<span id="cb15-3"><a href="#cb15-3"></a><span class="co">#&gt; [1] 1045    4</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a><span class="kw">colnames</span>(RolDE.data1)</span>
+<span id="cb15-5"><a href="#cb15-5"></a><span class="co">#&gt; [1] &quot;Feature ID&quot;                           </span></span>
+<span id="cb15-6"><a href="#cb15-6"></a><span class="co">#&gt; [2] &quot;RolDE Rank Product&quot;                   </span></span>
+<span id="cb15-7"><a href="#cb15-7"></a><span class="co">#&gt; [3] &quot;Estimated Significance Value&quot;         </span></span>
+<span id="cb15-8"><a href="#cb15-8"></a><span class="co">#&gt; [4] &quot;Adjusted Estimated Significance Value&quot;</span></span></code></pre></div>
+<p>By default, the features in the result data frame are given in the same order as entered.</p>
+<p>Let’s order the results based on the strength of longitudinal differential expression detected by RolDE:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>RolDE.data1&lt;-RolDE.data1[<span class="kw">order</span>(<span class="kw">as.numeric</span>(RolDE.data1[,<span class="dv">2</span>])),]</span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="kw">head</span>(RolDE.data1, <span class="dv">5</span>)</span></code></pre></div>
+<table>
+<colgroup>
+<col width="21%"></col>
+<col width="21%"></col>
+<col width="12%"></col>
+<col width="19%"></col>
+<col width="25%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Feature ID</th>
+<th align="right">RolDE Rank Product</th>
+<th align="right">Estimated Significance Value</th>
+<th align="right">Adjusted Estimated Significance Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">sp|P32263|P5CR_YEAST</td>
+<td align="left">sp|P32263|P5CR_YEAST</td>
+<td align="right">4.447960</td>
+<td align="right">0.0011445</td>
+<td align="right">0.9984284</td>
+</tr>
+<tr class="even">
+<td align="left">P01344ups|IGF2_HUMAN_UPS</td>
+<td align="left">P01344ups|IGF2_HUMAN_UPS</td>
+<td align="right">6.073178</td>
+<td align="right">0.0027254</td>
+<td align="right">0.9984284</td>
+</tr>
+<tr class="odd">
+<td align="left">sp|Q04935|COX20_YEAST</td>
+<td align="left">sp|Q04935|COX20_YEAST</td>
+<td align="right">7.989570</td>
+<td align="right">0.0042105</td>
+<td align="right">0.9984284</td>
+</tr>
+<tr class="even">
+<td align="left">sp|P40008|FMP52_YEAST</td>
+<td align="left">sp|P40008|FMP52_YEAST</td>
+<td align="right">9.356095</td>
+<td align="right">0.0051847</td>
+<td align="right">0.9984284</td>
+</tr>
+<tr class="odd">
+<td align="left">sp|P15180|SYKC_YEAST</td>
+<td align="left">sp|P15180|SYKC_YEAST</td>
+<td align="right">9.619002</td>
+<td align="right">0.0058718</td>
+<td align="right">0.9984284</td>
+</tr>
+</tbody>
+</table>
+<p>Explore the distribution of the estimated significance values:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">hist</span>(RolDE.data1<span class="op">$</span><span class="st">`</span><span class="dt">Estimated Significance Value</span><span class="st">`</span>, <span class="dt">main =</span> <span class="st">&quot;Estimated significance values&quot;</span>, <span class="dt">xlab=</span><span class="st">&quot;&quot;</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>As can be observed, the distribution of the estimated significance values is approximately uniform. Data1 is random data; the values for the features have been randomly assigned from a normal distribution with a mean of 22 and a standard deviation of 1.5. Overall, the null hypothesis between Condition1 and Condition2 is true; the conditions are not differentially expressed and a uniform significance value distribution is expected.</p>
+<p>After correcting for the simultaneous testing of multiple hypothesis by using the Bejamini-Hochberg (FDR) correction, no differentially epxressed feature remains with the commonly used FDR level of 0.05:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="kw">length</span>(<span class="kw">which</span>(RolDE.data1<span class="op">$</span><span class="st">`</span><span class="dt">Adjusted Estimated Significance Value</span><span class="st">`</span><span class="op">&lt;=</span><span class="fl">0.05</span>))</span>
+<span id="cb18-2"><a href="#cb18-2"></a><span class="co">#&gt; [1] 0</span></span></code></pre></div>
+<p>The calculation of significance values in RolDE is controlled via the parameter <em>sigValSampN</em> which control if the significance values should be calculated and how many permutations should be used when determining the significance values. Computational time required by RolDE can be reduced by not calculating the significance values by <em>sigValSampN</em> to 0. By increasing <em>sigValSampN</em> from the default number, the significance values can be estimated more accurately but the required computational time will also increase. If parallel processing for RolDE is enabled (<em>n_cores</em> &gt; 1), it will also be utilized when estimating the significance values.</p>
+<p>The estimated significance values can be adjusted by any method included in the p.adjust method in the stats package. Alternatively, q-values as defined by Storey et al. in the Bioconductor package qvalue can be used. Valid values for <em>sig_adj_meth</em> are then: “holm”, “hochberg”, “hommel”, “bonferroni”, “BH”, “BY”,“fdr”,“none”, “qvalue”.</p>
+</div>
+<div id="semi-simulated-spike-in-dataset" class="section level2">
+<h2>Semi-simulated spike-in dataset</h2>
+<p>In addition to the random data already explored, semi-simulated spike-in datasets with differential expression between the conditions are also included in the RolDE package:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="kw">data</span>(<span class="st">&quot;data3&quot;</span>)</span>
+<span id="cb19-2"><a href="#cb19-2"></a><span class="kw">data</span>(<span class="st">&quot;des_matrix3&quot;</span>)</span>
+<span id="cb19-3"><a href="#cb19-3"></a>?data3</span></code></pre></div>
+<div class="r-help-page">
+<table width="100%" summary="page for data3">
+<tr>
+<td>
+data3
+</td>
+<td style="text-align: right;">
+R Documentation
+</td>
+</tr>
+</table>
+<h2>
+A semi-simulated UPS1 spike-in dataset with differences in longitudinal expression for the spike-in proteins - no missing values.
+</h2>
+<h3>
+Description
+</h3>
+<p>
+A longitudinal proteomics dataset with five timepoints, two conditions and three replicates for each sample at each timepoint in each condition. The expression values for each protein in each sample have been generated by using the <code>rnorm</code> function and the means and standard deviations of the corresponding proteins and samples in the original experimental UPS1 spike-in data. In this manner, the expression for each protein in each sample could be replicated with some random variation multiple times when necessary. The pattern of missing values was directly copied from the used samples in the original UPS1 spike-in dataset. All proteins with missing values have been filtered out. Linear-like trends for the spike-in proteins for Condition 1 were generated using the 4,4,10,25 and 50 fmol samples of the original UPS1 spike-in data. Linear-like trends for the spike-in proteins for Condition 2 were generated using the 2,4,4,10 and 25 fmol samples of the original UPS1 spike-in data. For more information about the generation of the semi-simulated spike-in datasets, see the original RolDE publication. In the spike-in datasets, the UPS1 spike-in proteins are expected to differ between conditions while the expression of the rest of the proteins (the background proteins) are expected to remain stable between the conditions, excluding experimental noise.
+</p>
+<h3>
+Usage
+</h3>
+<pre class="r">
+data3
+</pre>
+<h3>
+Format
+</h3>
+<p>
+A matrix with 1033 rows and 30 variables.
+</p>
+<h3>
+Source
+</h3>
+<p>
+<a href="https://www.ebi.ac.uk/pride/archive/projects/PXD002099">https://www.ebi.ac.uk/pride/archive/projects/PXD002099</a>
+</p>
+</div>
+<p>Let’s run RolDE for data3 using the Bonferroni procedure for multiple hypothesis adjustement:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>data3.res&lt;-<span class="kw">RolDE</span>(<span class="dt">data=</span>data3, <span class="dt">des_matrix=</span>des_matrix3, <span class="dt">n_cores=</span><span class="dv">3</span>, <span class="dt">sig_adj_meth =</span> <span class="st">&quot;bonferroni&quot;</span>)</span></code></pre></div>
+<p>Retrieve the final RolDE results and organize the results based on strength of differential expression:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>RolDE.data3&lt;-data3.res<span class="op">$</span>RolDE_Results</span>
+<span id="cb21-2"><a href="#cb21-2"></a>RolDE.data3&lt;-RolDE.data3[<span class="kw">order</span>(<span class="kw">as.numeric</span>(RolDE.data3[,<span class="dv">2</span>])),]</span>
+<span id="cb21-3"><a href="#cb21-3"></a><span class="kw">head</span>(RolDE.data3, <span class="dv">3</span>)</span></code></pre></div>
+<table>
+<colgroup>
+<col width="20%"></col>
+<col width="20%"></col>
+<col width="13%"></col>
+<col width="19%"></col>
+<col width="26%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">Feature ID</th>
+<th align="right">RolDE Rank Product</th>
+<th align="right">Estimated Significance Value</th>
+<th align="right">Adjusted Estimated Significance Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">P41159ups|LEP_HUMAN_UPS</td>
+<td align="left">P41159ups|LEP_HUMAN_UPS</td>
+<td align="right">5.235409</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">P01133ups|EGF_HUMAN_UPS</td>
+<td align="left">P01133ups|EGF_HUMAN_UPS</td>
+<td align="right">5.473704</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">P01112ups|RASH_HUMAN_UPS</td>
+<td align="left">P01112ups|RASH_HUMAN_UPS</td>
+<td align="right">7.894447</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Explore the distribution of the estimated significance values:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="kw">hist</span>(RolDE.data3<span class="op">$</span><span class="st">`</span><span class="dt">Estimated Significance Value</span><span class="st">`</span>, <span class="dt">main =</span> <span class="st">&quot;Estimated significance values&quot;</span>, <span class="dt">xlab=</span><span class="st">&quot;&quot;</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>We can now observe, that the distribution of signficance values is very different than for the random data of data1, where the null hypothesis was true. In data3, true differential expression between the conditions exists. The spike-in proteins are expected to change between the conditions, while most of the background proteins are expected to remain stable between conditions. However, in reality this is not always the case - some background proteins might be changing too due to variations in the experimental conditions during the preparation of the dataset.</p>
+<p>Let’s see how RolDE has ranked the spike-in proteins known to be changing between the conditions:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="kw">grep</span>(<span class="st">&quot;ups&quot;</span>, RolDE.data3[,<span class="dv">1</span>])</span>
+<span id="cb23-2"><a href="#cb23-2"></a><span class="co">#&gt;  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 21 22 23 24 25 26 27</span></span>
+<span id="cb23-3"><a href="#cb23-3"></a><span class="co">#&gt; [26] 29 30 31 32 33 34 35 36 37 38 39 41 42 43 44 46 47 48 54 57 60 67</span></span></code></pre></div>
+<p>Most of the spike-in proteins are located near the top of the result list, as expected.</p>
+<p>How many of the proteins remain signifcant at the alpha level of 0.05 after the Bonferroni procedure to control for multiple hypothesis testing:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="kw">length</span>(<span class="kw">which</span>(RolDE.data3[,<span class="dv">4</span>]<span class="op">&lt;=</span><span class="fl">0.05</span>))</span>
+<span id="cb24-2"><a href="#cb24-2"></a><span class="co">#&gt; [1] 65</span></span></code></pre></div>
+<p>Findings from the DE analysis can be plotted with the <em>plotFindings</em> function included in the RolDE package:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>?plotFindings</span></code></pre></div>
+<div class="r-help-page">
+<table width="100%" summary="page for plotFindings">
+<tr>
+<td>
+plotFindings
+</td>
+<td style="text-align: right;">
+R Documentation
+</td>
+</tr>
+</table>
+<h2>
+Plot RolDE results
+</h2>
+<h3>
+Description
+</h3>
+<p>
+Plot the findings from longitudinal differential expression analysis with RolDE.
+</p>
+<h3>
+Usage
+</h3>
+<pre class="r">
+plotFindings(file_name = NULL, RolDE_res, top_n, col1 = &quot;blue&quot;, col2 = &quot;red&quot;)
+</pre>
+<h3>
+Arguments
+</h3>
+<table summary="R argblock">
+<tr valign="top">
+<td>
+<code>file_name</code>
+</td>
+<td>
+<p>
+a string indicating the file name in which the results should be plotted. Should have a “.pdf” extension. Default is NULL, no file is created.
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>RolDE_res</code>
+</td>
+<td>
+<p>
+the RolDE result object.
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>top_n</code>
+</td>
+<td>
+<p>
+an integer or a vector of integers indicating what top differentially expressed features should be plotted. If <code>top_n</code> is a single number, the <code>top_n</code> most differentially expressed feature will be plotted (e.g <code>top_n</code>=1 will plot the most differentially expressed feature). If <code>top_n</code> is a vector of numbers, the differentially expressed features corresponding to top detections within the given range will be plotted (e.g. <code>top_n</code>=seq(1:50) will plot the top 50 differentially expressed features). If more than one feature will be plotted, it is advisable to define a suitable file name in <code>file_name</code>.
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>col1</code>
+</td>
+<td>
+<p>
+a string indicating which color should be used for replicates / individualsin in condition 1. The default is blue.
+</p>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<code>col2</code>
+</td>
+<td>
+<p>
+a string indicating which color should be used for replicates / individualsin in condition 2. The default is red.
+</p>
+</td>
+</tr>
+</table>
+<h3>
+Details
+</h3>
+<p>
+The function plots the longitudinal expression of the top RolDE findings. The function can plot either the expression of a single finding or multiple top findings as indicated by the <code>top_n</code>. The findings can be plotted into a pdf file as indicated by the <code>file_name</code>. The given <code>file_name</code> should have a “.pdf” extension.
+</p>
+</div>
+<div id="applying-rolde-in-example-data-with-non-aligned-time-points" class="section level3">
+<h3>Applying RolDE in example data with non aligned time points</h3>
+<p>In addition to data with aligned time points, RolDE can be applied in data with non-aligned time points. However, the <em>aligned</em> parameter in RolDE must now be set to FALSE in order for RolDE to discern that time points in the data are not aligned.</p>
+<p>Instead of fixed time points, the integer values in the time point column 3 of the design matrix should now be replaced with continuous numerical values, or time values (e.g. age at the time of sampling).</p>
+</div>
+<div id="changing-the-settings-for-rolde" class="section level3">
+<h3>Changing the settings for RolDE</h3>
+<p>While RolDE performs typically very well with the default parameter values, the user might sometimes wish to alter some of these values for a specific kind of analysis. Some of the most important parameters include:</p>
+<p>Parameter <em>min_comm_diff</em> controls how many common time points must two replicates (individuals) have in different conditions to be compared. The first value controls the number of common time points for the RegROTS module, while the second one controls the number of common time points for the DiffROTS module. If <em>min_comm_diff</em> is set to “auto”, RolDE will use a value of 3 for the RegROTS module and a value of 1 for the DiffROTS module. In the case of data with non-aligned time points, the first value of <em>min_comm_diff</em> controls how many time values (or similar, e.g. age, temperature) must both replicates in different conditions have in the common time interval to be compared.</p>
+<p>Defining larger values for the minimum number of common time points to be used in RolDE with data1:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a>data1.res&lt;-<span class="kw">RolDE</span>(<span class="dt">data=</span>data1, <span class="dt">des_matrix=</span>des_matrix1, <span class="dt">doPar=</span>T, <span class="dt">n_cores=</span><span class="dv">3</span>, <span class="dt">min_comm_diff =</span> <span class="kw">c</span>(<span class="dv">4</span>,<span class="dv">3</span>))</span></code></pre></div>
+<p>Using the above values for <em>min_comm_diff</em> requires the replicates in different conditions to have 4 common time points to be compared in the RegROTS module and 3 common time points to be compared in the DiffROTS module.</p>
+<p><em>min_feat_obs</em> controls the number of non-missing values a feature must have for an individual in a condition to be compared in the RegROTS module and the DiffROTS module (in data with aligned time points). A feature is required to have at least <em>min_feat_obs</em> non-missing values for both replicates in the different conditions to be compared. If lowered, more missing values are allowed but the analysis may become less accurate. If increased, only replicates (individuals) with less missing values for a feature are compared.</p>
+<p>The user can control the degree of polynomials used by the RegROTS and the PolyReg modules via the <em>degtree_RegROTS</em> and the <em>degree_PolyReg parameters</em>. If left to “auto”, RolDE will by default use as the <em>degree_RegROTS</em>=max(1, min(floor(median(t)/2),4)) and as the <em>degree_PolyReg</em>=max(2, min((median(t)-1),5)), where t is a vector of the number of time points/values in all the replicates.</p>
+<p>Using RolDE with non default user given polynomial degrees for the RegROTS and PolyReg modules:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a>data1.res&lt;-<span class="kw">RolDE_Main</span>(<span class="dt">data=</span>data1, <span class="dt">des_matrix=</span>des_matrix1, <span class="dt">n_cores=</span><span class="dv">3</span>, <span class="dt">degree_RegROTS =</span> <span class="dv">2</span>, <span class="dt">degree_PolyReg =</span> <span class="dv">3</span>)</span></code></pre></div>
+<p>By default, RolDE uses fixed effects only regression with a common intercept and slope for the replicates (individuals) when time points in the data are aligned and mixed effects models with a random effect for the individual baseline (intercept) if the time points are non aligned for the PolyReg and the DiffROTS (only in data with non aligned time points) modules. This behaviour is controlled with the parameter <em>model_type</em> and the default behaviour is induced when <em>model_type</em> is allowed to be “auto”. However, the user can choose to use mixed effects regression modelling when appropriate by setting the parameter <em>model_type</em> as “mixed0” for random effects for the individual baseline and setting <em>model_type</em> as “mixed1” for an individual baseline and slope. Fixed effects only models can be chosen to be used by setting as “fixed”. Valid inputs for  are “auto” (the default), “mixed0”, “mixed1” and “fixed”.</p>
+<p>Analyzing data1 using mixed effects modelling with random intercepts for the replicates in the PolyReg module of RolDE:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>data1.res&lt;-<span class="kw">RolDE_Main</span>(<span class="dt">data=</span>data1, <span class="dt">des_matrix=</span>des_matrix1, <span class="dt">n_cores=</span><span class="dv">3</span>, <span class="dt">model_type=</span><span class="st">&quot;mixed0&quot;</span>)</span></code></pre></div>
+<p>Analyzing data1 using mixed effects modelling with random intercepts and also random linear slopes for the replicates in the PolyReg AND the DiffROTS modules of RolDE:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>data1.res&lt;-<span class="kw">RolDE</span>(<span class="dt">data=</span>data1, <span class="dt">des_matrix=</span>des_matrix1, <span class="dt">n_cores=</span><span class="dv">3</span>, <span class="dt">model_type=</span><span class="st">&quot;mixed1&quot;</span>)</span></code></pre></div>
+<p>Altering the <em>model_type</em> parameter has an effect for the DiffROTS module only when the time points in the data are non-aligned. In non-aligned time point data, the expression level differences between the conditions in the DiffROTS module is examined when accounting for time-associated trends of varying complexity in the data.</p>
+</div>
+<div id="preparation-of-data-for-rolde" class="section level3">
+<h3>Preparation of data for RolDE</h3>
+<p>The data for RolDE needs to be appropriately preprocessed. RolDE does not perform any filtering or normalization for the data; such preprocessing must be performed prior to applying RolDE. Similarly, adjusting for possible confounding effects in the data must be performed before the application of RolDE.</p>
+</div>
+<div id="references" class="section level3">
+<h3>References</h3>
+<p>Elo, Laura, Filen S, Lahesmaa R, et al. Reproducibility-optimized test statistic for ranking genes in microarray studies. IEEE/ACM Trans. Comput. Biol. Bioinform. 2008; 5:423-31.</p>
+<p>Suomi T, Seyednasrollah F, Jaakkola MK, et al. ROTS: An R package for reproducibility-optimized statistical testing. PLoS Comput. Biol. 2017; 13:5.</p>
+<p>Storey JD, Bass AJ, Dabney A, et al. qvalue: Q-value estimation for false discovery rate control. 2019.</p>
+<p>Välikangas T, Suomi T, ELo LL, et al. Enhanced longitudinal differential expression detection in proteomics with robust reproducibility optimization regression. bioRxiv 2021.</p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,4 +1,5 @@
-estSigValAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyreg, reg_rots_pval, diff_rots_pval, polyreg_pval, rank_products, na_treat, rand_seed, n_cores, sig_adj_meth, sigValSampN, regrots_weigths, diffrots_weigths){
+estSigValAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyreg, reg_rots_pval, diff_rots_pval, polyreg_pval, rank_products, n_cores, sig_adj_meth, sigValSampN, regrots_weigths, diffrots_weigths){
+
   #Organize
   res_regrots<-res_regrots[rownames(rank_products),]
   res_diffrots<-res_diffrots[rownames(rank_products),]
@@ -18,13 +19,14 @@ estSigValAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyreg, 
   if(!is.matrix(polyreg_pval) & is.numeric(polyreg_pval)){
     polyreg_pval=as.matrix(polyreg_pval)
   }
+
   rp_reg<-as.numeric(res_regrots[,2])
   rp_diff<-as.numeric(res_diffrots[,2])
   p_poly<-as.numeric(res_polyreg[,2])
 
-  rank_reg<-rank(rp_reg,ties.method = "random", na.last = T) #CHECK ties.method
-  rank_diff<-rank(rp_diff,ties.method = "random", na.last = T)
-  rank_poly<-rank(p_poly,ties.method = "random", na.last = T)
+  rank_reg<-rank(rp_reg,ties.method = "random", na.last = TRUE)
+  rank_diff<-rank(rp_diff,ties.method = "random", na.last = TRUE)
+  rank_poly<-rank(p_poly,ties.method = "random", na.last = TRUE)
 
   names(rp_reg)<-rank_reg
   names(rp_diff)<-rank_diff
@@ -33,7 +35,7 @@ estSigValAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyreg, 
   #create a uniform distribution of enough p-values
   sim_p<-seq(from=0, to=1, length.out = nrow(rank_products)*1000) #Should be enough?
   all_poly_pvals=as.numeric(unlist(polyreg_pval)) #uniform if random data
-  ord_poly=rank(all_poly_pvals, na.last = T, ties.method = "random")
+  ord_poly=rank(all_poly_pvals, na.last = TRUE, ties.method = "random")
 
   sigValSampN<-ceiling(sigValSampN/nrow(rank_products))
   sim_rps<-matrix(nrow = nrow(data), ncol = sigValSampN)
@@ -41,9 +43,8 @@ estSigValAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyreg, 
 
   cl <- parallel::makeCluster(n_cores)
   doParallel::registerDoParallel(cl)
-  sim_rps <- foreach::foreach(co=1:ncol(sim_rps), .export=c("getSimRankProds", "getSPPoly", "getSimRPs", "getRank"), .packages = c("foreach"), .combine=cbind) %dopar% {
-    used_seed<-rand_seed+co
-    col_Val<-getSimRankProdsWeights(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, rp_diff, p_poly, used_seed, na_treat, regrots_weigths, diffrots_weigths, sigValSampN)
+  sim_rps <- foreach::foreach(co=1:ncol(sim_rps), .export=c("getSimRankProdsWeights", "getSPPoly", "getSimRPsWeights", "getRank"), .packages = c("foreach"), .combine=cbind) %dorng% {
+    col_Val<-getSimRankProdsWeights(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, rp_diff, p_poly, regrots_weigths, diffrots_weigths, sigValSampN)
     col_Val
   }
   parallel::stopCluster(cl)
@@ -69,7 +70,7 @@ estSigValAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyreg, 
   }
 
   fin_res<-cbind(rank_products, estSigVals, estAdjSigVal)
-  fin_res<-data.frame(fin_res, stringsAsFactors = F)
+  fin_res<-data.frame(fin_res, stringsAsFactors = FALSE)
   colnames(fin_res)=c("Feature ID", "RolDE Rank Product", "Estimated Significance Value", "Adjusted Estimated Significance Value")
 
   fin_res[,1]=as.character(fin_res[,1])

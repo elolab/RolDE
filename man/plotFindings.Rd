@@ -20,6 +20,9 @@ If more than one feature will be plotted, it is advisable to define a suitable f
 
 \item{col2}{a string indicating which color should be used for replicates / individualsin in condition 2. The default is red.}
 }
+\value{
+\code{plotFindings} Plots the results from the RolDE object.
+}
 \description{
 Plot the findings from longitudinal differential expression analysis with RolDE.
 }
@@ -27,4 +30,8 @@ Plot the findings from longitudinal differential expression analysis with RolDE.
 The function plots the longitudinal expression of the top RolDE findings. The function can plot either the expression of a single finding
 or multiple top findings as indicated by the \code{top_n}. The findings can be plotted into a pdf file as indicated by the \code{file_name}.
 The given \code{file_name} should have a ".pdf" extension.
+}
+\examples{
+#Plotting the most DE finding. DE results are in the res3 object.
+plotFindings(file_name = NULL, RolDE_res = res3, top_n = 1)
 }
