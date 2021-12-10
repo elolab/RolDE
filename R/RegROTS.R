@@ -1,4 +1,4 @@
-RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_cores){
+RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_cores, aligned){
 
   degree<-degree_RegROTS
   unique_conditions<-unique(as.character(des_matrix[,2]))
@@ -8,8 +8,47 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
   control<-unique_conditions[1]
   case<-unique_conditions[2]
 
+  #Function to get orthogonal polynomials in case of nonaligned timepoints
+  my_poly <- function (x, degree = 1) {
+    ## check feasibility
+    if (length(unique(x)) < degree)
+      stop("insufficient unique data points for specified degree!")
+    ## centring covariates (so that `x` is orthogonal to intercept)
+    centre <- mean(x)
+    x <- x - centre
+    beta <- alpha <- norm2 <- numeric(degree)
+    ## repeat first polynomial `x` on all columns to initialize design matrix X
+    X <- matrix(x, nrow = length(x), ncol = degree, dimnames = list(NULL, 1:degree))
+    ## compute alpha[1] and beta[1]
+    norm2[1] <- new_norm <- drop(crossprod(x))
+    alpha[1] <- sum(x ^ 3) / new_norm
+    beta[1] <- new_norm / length(x)
+    if (degree > 1L) {
+      old_norm <- new_norm
+      ## second polynomial
+      X[, 2] <- Xi <- (x - alpha[1]) * X[, 1] - beta[1]
+      norm2[2] <- new_norm <- drop(crossprod(Xi))
+      alpha[2] <- drop(crossprod(Xi * Xi, x)) / new_norm
+      beta[2] <- new_norm / old_norm
+      old_norm <- new_norm
+      ## further polynomials obtained from recursion
+      i <- 3
+      while (i <= degree) {
+        X[, i] <- Xi <- (x - alpha[i - 1]) * X[, i - 1] - beta[i - 1] * X[, i - 2]
+        norm2[i] <- new_norm <- drop(crossprod(Xi))
+        alpha[i] <- drop(crossprod(Xi * Xi, x)) / new_norm
+        beta[i] <- new_norm / old_norm
+        old_norm <- new_norm
+        i <- i + 1
+      }
+    }
+    ## add attributes and return
+    attr(X, "coefs") <- list(centre = centre, alpha = alpha[-degree], beta = beta[-degree])
+    X
+  }
+
   #The main function to compare coefficients
-  getCoef<-function(r1, r2, time1, time2, degree, thres_feat_both_cond, min_feat_obs) {
+  getCoef<-function(r1, r2, time1, time2, degree, thres_feat_both_cond, min_feat_obs, aligned) {
 
     if( sum(!is.na(r1))<min_feat_obs | sum(!is.na(r2))<min_feat_obs | sum(is.na(c(r1,r2)))>thres_feat_both_cond ){
       diffs<-rep(NA, degree+1)
@@ -28,17 +67,36 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
       if((length(time1)-1)>=degree){d1<-degree}else{d1<-length(time1)-1}
       if((length(time2)-1)>=degree){d2<-degree}else{d2<-length(time2)-1}
 
-      mod1<-tryCatch({
-        lm(as.numeric(r1)~poly(time1,(d1)))
-      },error = function(e) {
-        NULL
-      })
+      if(aligned){
+        mod1<-tryCatch({
+          lm(as.numeric(r1)~poly(time1,(d1)))
+        },error = function(e) {
+          NULL
+        })
 
-      mod2<-tryCatch({
-        lm(as.numeric(r2)~poly(time2,(d2)))
-      },error = function(e) {
-        NULL
-      })
+        mod2<-tryCatch({
+          lm(as.numeric(r2)~poly(time2,(d2)))
+        },error = function(e) {
+          NULL
+        })
+
+      }else{
+        poly.time1<-my_poly(x = time1, degree = d1)
+        poly.time2<-my_poly(x = time2, degree = d2)
+
+        mod1<-tryCatch({
+          lm(as.numeric(r1)~poly.time1)
+        },error = function(e) {
+          NULL
+        })
+
+        mod2<-tryCatch({
+          lm(as.numeric(r2)~poly.time2)
+        },error = function(e) {
+          NULL
+        })
+
+      }
 
       if(is.null(mod1) | is.null(mod2)){
         diffs<-rep(NA, degree+1)
@@ -102,7 +160,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
 
         thres_feat_both_cond<-(length(time_control)+length(time_case))-4 #Internal threshold. Guarantees the filtering away extreme scenarios. Doesn't really play a role? To be removed in the future?
 
-        res_vals<-getCoef(r1 = row_case, r2 = row_control, time1 = time_case, time2 = time_control, degree = degree, thres_feat_both_cond = thres_feat_both_cond, min_feat_obs = min_feat_obs)
+        res_vals<-getCoef(r1 = row_case, r2 = row_control, time1 = time_case, time2 = time_control, degree = degree, thres_feat_both_cond = thres_feat_both_cond, min_feat_obs = min_feat_obs, aligned = aligned)
         res_row[seq(from=comp, to=length(res_row), by=replicate_comparisons)]=res_vals
 
       } #end comparison loop

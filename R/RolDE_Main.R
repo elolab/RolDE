@@ -251,7 +251,7 @@ RolDE_Main<-function(data, des_matrix, aligned=TRUE, min_comm_diff="auto", min_f
   message("Running RegROTS")
   res_regrots<-tryCatch(
     {
-      RegROTS(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_cores)
+      RegROTS(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_cores, aligned)
     },
     error=function(errorCond){
       message("Execution halted with the following error:")
