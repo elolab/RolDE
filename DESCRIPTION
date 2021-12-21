@@ -14,7 +14,7 @@ Authors@R: c(person("Tommi", "Valikangas",
              email = "tsvali@utu.fi",
              role=c("cre", "aut")))
 License: GPL-3
-Imports: stats, ROTS, matrixStats, foreach, parallel, doParallel, doRNG, rngtools, nlme, qvalue, grDevices, graphics, utils
+Imports: stats, methods, ROTS, matrixStats, foreach, parallel, doParallel, doRNG, rngtools, SummarizedExperiment, nlme, qvalue, grDevices, graphics, utils
 Depends: R (>= 3.1.0)
 Encoding: UTF-8
 LazyData: TRUE

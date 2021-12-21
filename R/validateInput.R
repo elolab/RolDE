@@ -17,10 +17,6 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
 
   if(!is.numeric(min_feat_obs)){stop("Incorrect min_feat_obs. Numerical value needed.")}
 
-  nr_timepoints=max(as.numeric(unique(des_matrix[,3])))
-  if(nr_timepoints<3){stop("Too few timepoints. Longitudinal analysis not meaningful. Should be at least three.")}
-  if(any(min_comm_diff>nr_timepoints)){stop("Parameter min_comm_diff too large, not enough time points.")}
-
   if(model_type!="auto" & model_type!="fixed" & model_type!="mixed0" & model_type!="mixed1"){
     stop("Incorrect value for model_type. Allowed values for the parameter are: auto, fixed, mixed0 or mixed1.")
   }
@@ -85,7 +81,7 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
   #check that each individual has enough timepoints
   individual_timepoints<-numeric(length(unique_individuals))
   for(ind in 1:length(unique_individuals)){
-    ind_locs<-which(as.numeric(as.character(des_matrix[,4]))==ind)
+    ind_locs<-which(as.numeric(as.character(des_matrix[,4]))==unique_individuals[ind])
     individual_timepoints[ind]<-length(unique(as.numeric(as.character(des_matrix[ind_locs,3]))))
   }
 

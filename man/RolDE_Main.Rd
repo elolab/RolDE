@@ -6,7 +6,7 @@
 \usage{
 RolDE_Main(
   data,
-  des_matrix,
+  des_matrix = NULL,
   aligned = TRUE,
   min_comm_diff = "auto",
   min_feat_obs = 3,
@@ -19,13 +19,16 @@ RolDE_Main(
 )
 }
 \arguments{
-\item{data}{the normalized data as as a numerical matrix. Features (rows) and variables (columns) of the data must have unique identifiers.}
+\item{data}{the normalized data as as a numerical matrix or as a SummarizedExperiment instance. Features (rows) and variables (columns)
+of the data must have unique identifiers. If \code{data} is a SummarizedExperiment object, the design matrix must be included in the
+\code{colData} argument of the \code{data} object.}
 
 \item{des_matrix}{the design matrix for the \code{data}. Rows correspond to columns of
 the \code{data}. Must contain four columns. First column should contain sample (column) names of the \code{data}.
 Second column should indicate condition status (for each sample), for which longitudinal differential expression is to be examined. Third
 column should indicate time point (time point aligned data) or time value (non-aligned time point data) for each sample. Fourth column should provide
-the replicate (individual) information for each sample as a numeric value. Each replicate or indivdual should have a distinct number.}
+the replicate (individual) information for each sample as a numeric value. Each replicate or indivdual should have a distinct number.
+If \code{data} is a SummarizedExperiment object, the design matrix must be included in the \code{colData} argument of the \code{data} object.}
 
 \item{aligned}{logical; are the time points in different conditions and replicates (individuals) in the \code{data} aligned? In aligned time point data,
 the time points should be the same for each replicate (individual).}
@@ -195,7 +198,7 @@ For more details about \code{RolDE}, see the original \code{RolDE} publication (
 Please use \code{set.seed} for reproducibility.
 }
 \examples{
-#Default usage of RolDE in time points aligned data and 3 cores
+#Default usage of RolDE in time point aligned data and 3 cores
 set.seed(1) #For reproducibility.
 data1.res<-RolDE(data=data1, des_matrix=des_matrix1, n_cores=3)
 }

@@ -6,12 +6,15 @@
 #' between the conditions / groups. \code{RolDE} tolerates a fair amount of missing values and is especially suitable
 #' for noisy proteomics data.
 #'
-#' @param data the normalized data as as a numerical matrix. Features (rows) and variables (columns) of the data must have unique identifiers.
+#' @param data the normalized data as as a numerical matrix or as a SummarizedExperiment instance. Features (rows) and variables (columns)
+#' of the data must have unique identifiers. If \code{data} is a SummarizedExperiment object, the design matrix must be included in the
+#' \code{colData} argument of the \code{data} object.
 #' @param des_matrix the design matrix for the \code{data}. Rows correspond to columns of
 #' the \code{data}. Must contain four columns. First column should contain sample (column) names of the \code{data}.
 #' Second column should indicate condition status (for each sample), for which longitudinal differential expression is to be examined. Third
 #' column should indicate time point (time point aligned data) or time value (non-aligned time point data) for each sample. Fourth column should provide
 #' the replicate (individual) information for each sample as a numeric value. Each replicate or indivdual should have a distinct number.
+#' If \code{data} is a SummarizedExperiment object, the design matrix must be included in the \code{colData} argument of the \code{data} object.
 #' @param aligned logical; are the time points in different conditions and replicates (individuals) in the \code{data} aligned (fixed)? In aligned time point data,
 #' the time points should be the same for each replicate (individual).
 #' @param n_cores a positive integer. The number of threads used for parallel computing. If set to 1 (the default), no parallel computing is used.
@@ -138,14 +141,28 @@
 #'@importFrom stats lm median na.omit quantile sd weighted.mean p.adjust
 #'@importFrom nlme lmeControl
 #'@importFrom utils tail head
+#'@importFrom methods is
 #'@import doRNG
 #'@import rngtools
+#'@import SummarizedExperiment
 #'@export
 #'@examples
-#'#Default usage of RolDE in time points aligned data and 3 cores
+#'#Default usage of RolDE in time point aligned data and 3 cores
 #'set.seed(1) #For reproducibility.
 #'data1.res<-RolDE(data=data1, des_matrix=des_matrix1, n_cores=3)
-RolDE<-function(data, des_matrix, aligned=TRUE, n_cores=1, model_type="auto", sigValSampN=500000, sig_adj_meth="fdr"){
+RolDE<-function(data, des_matrix=NULL, aligned=TRUE, n_cores=1, model_type="auto", sigValSampN=500000, sig_adj_meth="fdr"){
+
+  if(is(data, "SummarizedExperiment")){
+    des_matrix<-as.matrix(colData(data))
+    data<-as.matrix(assay(data))
+  }
+
+  if(is.null(des_matrix)){
+    if(!is(data, "SummarizedExperiment")){
+      stop("The design matrix argument is NULL and the data is not a SummarizedExperiment instance. Either the data and design matrix needs
+           to be provided separately or together as a SummarizedExperiment object.")
+    }
+  }
 
   results<-tryCatch(
     {

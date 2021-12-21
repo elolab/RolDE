@@ -119,6 +119,23 @@ set.seed(1)
 data1.res<-RolDE(data=data1, des_matrix=des_matrix1, n_cores=3)
 ```
 
+RolDE supports the SummarizedExperiment data structure and the data and design matrix can be provided to RolDE as a SummarizedExperiment object. In this case, the *data* argument for RolDE must be a SummarizedExperiment object, where the data matrix is included as a list in the *assays* argument and the design matrix in the *colData* argument. The format of the data matrix and the design matrix within the SummarizedExperiment object must be the same as when provided separately.
+
+Constructing a SummarizedExperiment object from data1 and the associated design matrix for RolDE:
+
+```{r RolDE SE usage, echo=TRUE, eval=FALSE}
+SE_object_for_RolDE = SummarizedExperiment(assays=list(data1),
+                                            colData = des_matrix1)
+```
+
+Running RolDE using a SummarizedExperiment object including the data and the metadata:
+
+```{r RolDE SE object run, echo=TRUE, eval=FALSE}
+set.seed(1)
+data1.res<-RolDE(data=SE_object_for_RolDE, n_cores=3)
+```
+
+
 ```{r explore RolDE res data1, echo=FALSE}
 data(res1)
 data1.res=res1
