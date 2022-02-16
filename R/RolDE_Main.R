@@ -184,9 +184,9 @@
 #'@importFrom methods is
 #'@export
 #'@examples
-#'#Default usage of RolDE in time point aligned data and 3 cores
+#'#Default usage of RolDE in a small example time point aligned data without significance value estimation and 1 core
 #'set.seed(1) #For reproducibility.
-#'data1.res<-RolDE(data=data1, des_matrix=des_matrix1, n_cores=3)
+#'data2.res<-RolDE_Main(data=data2, des_matrix=des_matrix2, n_cores=1, sigValSampN = 0)
 RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", min_feat_obs=3, degree_RegROTS="auto", degree_PolyReg="auto", n_cores=1, model_type="auto", sigValSampN=500000, sig_adj_meth="fdr"){
 
   if(is(data, "SummarizedExperiment")){

@@ -153,9 +153,9 @@ For more details about \code{RolDE}, see the original \code{RolDE} publication (
 Please use \code{set.seed} for reproducibility.
 }
 \examples{
-#Default usage of RolDE in time point aligned data and 3 cores
+#Default usage of RolDE in a small example time point aligned data without significance value estimation and 1 core
 set.seed(1) #For reproducibility.
-data1.res<-RolDE(data=data1, des_matrix=des_matrix1, n_cores=3)
+data2.res<-RolDE(data=data2, des_matrix=des_matrix2, n_cores=1, sigValSampN = 0)
 }
 \references{
 Elo, Laura, Filen S, Lahesmaa R, et al. Reproducibility-optimized test statistic for ranking genes in microarray studies. IEEE/ACM Trans. Comput. Biol. Bioinform. 2008; 5:423-31.\cr
