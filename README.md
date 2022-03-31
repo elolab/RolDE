@@ -9,11 +9,25 @@ Contrary to many existing approaches, the `RolDE` does not require prior knowled
 
 ## Installation
 
+####  GitHub
+
 The latest version of `RolDE` can be downloaded from GitHub using the devtools R package:
 
 `devtools::install_github(repo = "https://github.com/elolab/RolDE", build_vignettes = T)`
 
 The `build_vignettes` parameter should be set to `TRUE` to enable the building of instructions and examples for RolDE usage.
+
+####  Bioconductor
+
+The latest release of RolDE can also be installed from Bioconductor:
+
+```
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("RolDE")
+```
+
 
 ## Instructions
 
