@@ -17,7 +17,7 @@ License: GPL-3
 Imports: stats, methods, ROTS, matrixStats, foreach, parallel, doParallel, doRNG, rngtools, SummarizedExperiment, nlme, qvalue, grDevices, graphics, utils
 Depends: R (>= 3.1.0)
 Encoding: UTF-8
-LazyData: TRUE
+LazyData: FALSE
 RoxygenNote: 7.1.2
 Suggests: knitr, printr, rmarkdown, testthat
 VignetteBuilder: knitr
