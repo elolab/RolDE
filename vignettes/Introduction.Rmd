@@ -1,6 +1,8 @@
 ---
 title: "Introduction to the Robust longitudinal Differential Expression (RolDE) method"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{Introduction}
   %\VignetteEngine{knitr::rmarkdown}
@@ -20,7 +22,7 @@ library(printr)
 library(knitr)
 ```
 
-### Introduction 
+## Introduction 
 
 RolDE is a composite method, consisting of three independent modules with different approaches to detecting differential expression. The combination of these diverse modules allows RolDE to robustly detect varying differences in longitudinal trends and expression levels in diverse data types and experimental settings.
 
@@ -32,7 +34,7 @@ In the PolyReg module, polynomial regression modelling is used to detect longitu
 
 Finally, to conclusively detect any differential expression, the findings from the different modules are combined using the rank product. For more details about the method, see the original RolDE publication (Valikangas et al.).
 
-### Applying RolDE in example datasets with aligned time points
+## Applying RolDE in example datasets with aligned time points
 
 First, load the dataset and the design matrix to be used:
 
@@ -188,7 +190,7 @@ The calculation of significance values in RolDE is controlled via the parameter 
 
 The estimated significance values can be adjusted by any method included in the p.adjust method in the stats package. Alternatively, q-values as defined by Storey et al. in the Bioconductor package qvalue can be used. Valid values for *sig_adj_meth* are then: "holm", "hochberg", "hommel", "bonferroni", "BH", "BY","fdr","none", "qvalue". 
 
-## Semi-simulated spike-in dataset
+### Semi-simulated spike-in dataset
 
 In addition to the random data already explored, a semi-simulated spike-in dataset with differential expression between the conditions is also included in the RolDE package:
 
@@ -246,13 +248,13 @@ Findings from the DE analysis can be plotted with the *plotFindings* function in
 ?plotFindings
 ```
 
-### Applying RolDE in example data with non aligned time points
+## Applying RolDE in example data with non aligned time points
 
 In addition to data with aligned time points, RolDE can be applied in data with non-aligned time points. However, the *aligned* parameter in RolDE must now be set to FALSE in order for RolDE to discern that time points in the data are not aligned. 
 
 Instead of fixed time points, the integer values in the time point column 3 of the design matrix should now be replaced with continuous numerical values, or time values (e.g. age at the time of sampling). 
 
-### Changing the settings for RolDE
+## Changing the settings for RolDE
 
 While RolDE performs typically very well with the default parameter values, the user might sometimes wish to alter some of these values for a specific kind of analysis. Some of the most important parameters include:
 
@@ -297,11 +299,11 @@ data1.res<-RolDE(data=data1, des_matrix=des_matrix1, n_cores=3, model_type="mixe
 
 Altering the *model_type* parameter has an effect for the DiffROTS module only when the time points in the data are non-aligned. In non-aligned time point data, the expression level differences between the conditions in the DiffROTS module is examined when accounting for time-associated trends of varying complexity in the data. 
 
-### Preparation of data for RolDE
+## Preparation of data for RolDE
 
 The data for RolDE needs to be appropriately preprocessed. RolDE does not perform any filtering or normalization for the data; such preprocessing must be performed prior to applying RolDE. Similarly, adjusting for possible confounding effects in the data must be performed before the application of RolDE. 
 
-### References
+## References
 
 Elo, Laura, Filen S, Lahesmaa R, et al. Reproducibility-optimized test statistic for ranking genes in microarray studies. IEEE/ACM Trans. Comput. Biol. Bioinform. 2008; 5:423-31.
 
