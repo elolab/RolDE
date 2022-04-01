@@ -19,7 +19,7 @@ The `build_vignettes` parameter should be set to `TRUE` to enable the building o
 
 ####  Bioconductor
 
-The latest release of RolDE can also be installed from Bioconductor:
+The latest release of `RolDE` can also be installed from Bioconductor:
 
 ```
 if (!requireNamespace("BiocManager", quietly = TRUE))
