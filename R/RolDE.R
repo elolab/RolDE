@@ -10,11 +10,12 @@
 #' of the data must have unique identifiers. If \code{data} is a SummarizedExperiment object, the design matrix must be included in the
 #' \code{colData} argument of the \code{data} object.
 #' @param des_matrix the design matrix for the \code{data}. Rows correspond to columns of
-#' the \code{data}. Must contain four columns. First column should contain sample (column) names of the \code{data}.
-#' Second column should indicate condition status (for each sample), for which longitudinal differential expression is to be examined. Third
-#' column should indicate time point (time point aligned data) or time value (non-aligned time point data) for each sample. Fourth column should provide
-#' the replicate (individual) information for each sample as a numeric value. Each replicate or indivdual should have a distinct number.
-#' If \code{data} is a SummarizedExperiment object, the design matrix must be included in the \code{colData} argument of the \code{data} object.
+#' the \code{data}. Must contain four character columns (see included example design matrices \code{des_matrix1} or \code{des_matrix3}).
+#' First column should contain sample (column) names of the \code{data}. Second column should indicate condition status (for each sample),
+#' for which longitudinal differential expression is to be examined. Third column should indicate time point (time point aligned data)
+#' or time value (non-aligned time point data) for each sample. Fourth column should provide the replicate (individual)
+#' information for each sample as a numerical value. Each replicate or indivdual should have a distinct number. If \code{data} is a
+#' SummarizedExperiment object, the design matrix must be included in the \code{colData} argument of the \code{data} object.
 #' @param aligned logical; are the time points in different conditions and replicates (individuals) in the \code{data} aligned (fixed)? In aligned time point data,
 #' the time points should be the same for each replicate (individual).
 #' @param n_cores a positive integer. The number of threads used for parallel computing. If set to 1 (the default), no parallel computing is used.
