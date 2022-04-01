@@ -199,7 +199,7 @@ For more details about \code{RolDE}, see the original \code{RolDE} publication (
 Please use \code{set.seed} for reproducibility.
 }
 \examples{
-#Default usage of RolDE in a small example time point aligned data without significance value estimation and 1 core
+#Usage of RolDE in time point aligned data without significance value estimation and 1 core
 set.seed(1) #For reproducibility.
 data2.res<-RolDE_Main(data=data2, des_matrix=des_matrix2, n_cores=1, sigValSampN = 0)
 }
