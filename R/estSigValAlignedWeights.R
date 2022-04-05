@@ -43,7 +43,7 @@ estSigValAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyreg, 
 
   cl <- parallel::makeCluster(n_cores)
   doParallel::registerDoParallel(cl)
-  sim_rps <- foreach::foreach(co=1:ncol(sim_rps), .export=c("getSimRankProdsWeights", "getSPPoly", "getSimRPsWeights", "getRank"), .packages = c("foreach"), .combine=cbind) %dorng% {
+  sim_rps <- foreach::foreach(co=seq_len(ncol(sim_rps)), .export=c("getSimRankProdsWeights", "getSPPoly", "getSimRPsWeights", "getRank"), .packages = c("foreach"), .combine=cbind) %dorng% {
     col_Val<-getSimRankProdsWeights(reg_rots_pval, diff_rots_pval, polyreg_pval, all_poly_pvals, ord_poly, sim_p, rp_reg, rp_diff, p_poly, regrots_weigths, diffrots_weigths, sigValSampN)
     col_Val
   }

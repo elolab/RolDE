@@ -18,7 +18,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
     x <- x - centre
     beta <- alpha <- norm2 <- numeric(degree)
     ## repeat first polynomial `x` on all columns to initialize design matrix X
-    X <- matrix(x, nrow = length(x), ncol = degree, dimnames = list(NULL, 1:degree))
+    X <- matrix(x, nrow = length(x), ncol = degree, dimnames = list(NULL, seq_len(degree)))
     ## compute alpha[1] and beta[1]
     norm2[1] <- new_norm <- drop(crossprod(x))
     alpha[1] <- sum(x ^ 3) / new_norm
@@ -104,7 +104,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
         coeffs1<-mod1$coefficients
         coeffs2<-mod2$coefficients
         diffs<-numeric(degree+1)
-        diffs[1:(min(d1,d2, na.rm = TRUE)+1)]<-coeffs1[1:(min(d1,d2, na.rm = TRUE)+1)]-coeffs2[1:(min(d1,d2, na.rm = TRUE)+1)]
+        diffs[seq_len(min(d1,d2, na.rm = TRUE)+1)]<-coeffs1[seq_len(min(d1,d2, na.rm = TRUE)+1)]-coeffs2[seq_len(min(d1,d2, na.rm = TRUE)+1)]
         diffs[diffs==0]<-NA
       }
     }
@@ -116,11 +116,11 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
   #Parallel run - always, in case of sequential, the backend will be registered only with 1 thread (n_cores=1)
   cl <- parallel::makeCluster(n_cores)
   doParallel::registerDoParallel(cl)
-  rots_res_frame <- foreach::foreach(run=1:length(rots_runs), .export = c("fillGaps_New", "fillGapsAll_New"), .packages = c("ROTS", "doParallel", "matrixStats", "foreach"), .combine=cbind) %dorng% {
+  rots_res_frame <- foreach::foreach(run=seq_len(length(rots_runs)), .export = c("fillGaps_New", "fillGapsAll_New"), .packages = c("ROTS", "doParallel", "matrixStats", "foreach"), .combine=cbind) %dorng% {
     #Determine groups for ROTS
     run_comparisons<-rots_runs[[run]]
     replicate_comparisons<-ncol(run_comparisons)
-    groups_for_rots<-sort(rep(seq(1:(degree+1)),replicate_comparisons))
+    groups_for_rots<-sort(rep(seq_len(degree+1),replicate_comparisons))
 
     #Get the sample locations (columns) for the individuals in the comparisons for the current run.
     control_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[1])})))
@@ -135,11 +135,11 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
     rownames(coef_frame)<-rownames(data)
     colnames(coef_frame)<-groups_for_rots
 
-    for(r in 1:nrow(data)) {
+    for(r in seq_len(nrow(data))) {
 
       res_row<-numeric(ncol(coef_frame))
 
-      for(comp in 1:ncol(run_comparisons)){
+      for(comp in seq_len(ncol(run_comparisons))){
 
         cont_loc<-control_locs[[comp]]
         case_loc<-case_locs[[comp]]
@@ -164,7 +164,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
       data_temp1<-coef_frame[, which(groups_for_rots==x)]
       data_temp2<-as.numeric(unlist(data_temp1))
       data_temp2<-data_temp2/sd(data_temp2, na.rm = TRUE)
-      data_temp1[,c(1:ncol(data_temp1))]<-data_temp2
+      data_temp1[,c(seq_len(ncol(data_temp1)))]<-data_temp2
       data_temp1
     })
 

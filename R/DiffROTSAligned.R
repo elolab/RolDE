@@ -40,12 +40,12 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
   rots_res_frame=matrix(nrow=nrow(data), ncol = length(rots_runs))
   cl <- parallel::makeCluster(n_cores)
   doParallel::registerDoParallel(cl)
-  rots_res_frame <- foreach::foreach(run=1:length(rots_runs), .export = c("fillGaps_New", "fillGapsAll_New"), .packages = c("ROTS", "doParallel", "matrixStats", "foreach"), .combine=cbind) %dorng% {
+  rots_res_frame <- foreach::foreach(run=seq_len(length(rots_runs)), .export = c("fillGaps_New", "fillGapsAll_New"), .packages = c("ROTS", "doParallel", "matrixStats", "foreach"), .combine=cbind) %dorng% {
 
     #Determine groups for ROTS
     run_comparisons<-rots_runs[[run]]
     replicate_comparisons<-ncol(run_comparisons)
-    groups_for_rots<-sort(rep(seq(1:(nr_timepoints)),replicate_comparisons))
+    groups_for_rots<-sort(rep(seq_len(nr_timepoints),replicate_comparisons))
 
     #Get the sample locations (columns) for the individuals in the comparisons for the current run.
     control_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[1])})))
@@ -60,11 +60,11 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
     rownames(diff_frame)<-rownames(data)
     colnames(diff_frame)<-groups_for_rots
 
-    for(r in 1:nrow(data)) {
+    for(r in seq_len(nrow(data))) {
 
       res_row<-numeric(ncol(diff_frame))
 
-      for(comp in 1:ncol(run_comparisons)){
+      for(comp in seq_len(ncol(run_comparisons))){
 
         cont_loc<-control_locs[[comp]]
         case_loc<-case_locs[[comp]]

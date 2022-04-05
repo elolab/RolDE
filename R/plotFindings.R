@@ -58,7 +58,7 @@ plotFindings<-function(file_name=NULL, RolDE_res, top_n, col1="blue", col2="red"
     pdf(file=file_name, width = 11.7, height = 8.3,onefile = TRUE)
   }
 
-  for(j in 1:length(features_to_plot)){
+  for(j in seq_len(length(features_to_plot))){
     range_exprs=range(data_plot[features_to_plot[j],c(des_plot$Sample)], na.rm = TRUE)
     range_exprs=c((range_exprs[1]-range_exprs[1]*0.1), (range_exprs[2]+range_exprs[1]*0.1))
     plot_name=features_to_plot[j]
@@ -66,7 +66,7 @@ plotFindings<-function(file_name=NULL, RolDE_res, top_n, col1="blue", col2="red"
     #Plot by conditions
     #Condition 1
     uniq_inds_cond1=unique(des_plot_cond1$Replicate)
-    for(i in 1:length(uniq_inds_cond1)){
+    for(i in seq_len(length(uniq_inds_cond1))){
       inds_samp=which(des_plot_cond1$Replicate==uniq_inds_cond1[i])
       temp_des=des_plot_cond1[inds_samp,]
       #order by time
@@ -96,7 +96,7 @@ plotFindings<-function(file_name=NULL, RolDE_res, top_n, col1="blue", col2="red"
 
     #Condition2
     uniq_inds_cond2=unique(des_plot_cond2$Replicate)
-    for(i in 1:length(uniq_inds_cond2)){
+    for(i in seq_len(length(uniq_inds_cond2))){
       inds_samp=which(des_plot_cond2$Replicate==uniq_inds_cond2[i])
       temp_des=des_plot_cond2[inds_samp,]
       #order by time

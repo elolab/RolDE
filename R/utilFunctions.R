@@ -39,7 +39,7 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
 
   start_ind<-1
 
-  for(ind in 1:length(all_lengths)){
+  for(ind in seq_len(length(all_lengths))){
     if(names(all_lengths[ind])%in%real_ind_cond1){
       ind_cond=1
     }else{ind_cond=2}
@@ -49,11 +49,11 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
     if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
     found<-logical(nrow(ind_mat))
 
-    for(j in 1:nrow(ind_mat)){
-      for(i in 1:length(temp_list)){
+    for(j in seq_len(nrow(ind_mat))){
+      for(i in seq_len(length(temp_list))){
         temp_mat<-temp_list[[i]]
         if(ncol(temp_mat)==0){next}
-        for(co in 1:ncol(temp_mat)){
+        for(co in seq_len(ncol(temp_mat))){
           if(all(ind_mat[j,]==temp_mat[,co]))
             found[j]=TRUE
         }
@@ -128,9 +128,9 @@ fillGaps_New<-function(all_quant_vals, row, groups_for_rots){
     row_vals<-row[which(groups_for_rots==x)]
     if(length(locs_nonna)<2){
       imp.num<-2-length(locs_nonna)
-      vals<-sample(1:1000, length(imp.num), replace = TRUE)
+      vals<-sample(seq_len(1000), length(imp.num), replace = TRUE)
       vals<-all_quant_vals[vals]
-      row_vals[locs_na][1:imp.num]<-vals
+      row_vals[locs_na][seq_len(imp.num)]<-vals
     }
     row_vals
   }))
@@ -140,7 +140,7 @@ fillGaps_New<-function(all_quant_vals, row, groups_for_rots){
 #Fill in all gaps in in a row.
 fillGapsAll_New<-function(all_quant_vals, row){
   locs_na<-which(is.na(row))
-  vals<-sample(1:1000, length(locs_na), replace = TRUE)
+  vals<-sample(seq_len(1000), length(locs_na), replace = TRUE)
   vals<-all_quant_vals[vals]
   row[locs_na]=vals
   return(row)

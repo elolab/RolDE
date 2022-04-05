@@ -16,7 +16,7 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
     rownames(resid_frame)<-rownames(data)
     colnames(resid_frame)<-colnames(data)
 
-    for(r in 1:nrow(data)){
+    for(r in seq_len(nrow(data))){
 
       temp_data<-matrix(nrow = nrow(des_matrix), ncol = 4)
       temp_data<-data.frame(temp_data, stringsAsFactors = FALSE)
@@ -100,7 +100,7 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
   }
   parallel::stopCluster(cl)
   rownames(rots_frame)=rownames(data)
-  colnames(rots_frame)=c(0, seq(1:degree_PolyReg))
+  colnames(rots_frame)=c(0, seq_len(degree_PolyReg))
 
   #Combine the result from different degrees
   combin_fun<-"min" #minimum the default. Should alternatives be allowed? Rank product? Not allowed right now. CHECK!

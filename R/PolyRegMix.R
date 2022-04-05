@@ -14,7 +14,7 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
   cl <- parallel::makeCluster(n_cores)
   doParallel::registerDoParallel(cl)
 
-  res_frame <- foreach::foreach(r=1:nrow(data), .packages = c("nlme", "foreach"), .combine=rbind) %dorng% {
+  res_frame <- foreach::foreach(r=seq_len(nrow(data)), .packages = c("nlme", "foreach"), .combine=rbind) %dorng% {
 
     temp_data<-matrix(nrow = nrow(des_matrix), ncol = 4)
     temp_data<-data.frame(temp_data, stringsAsFactors = FALSE)
@@ -48,7 +48,7 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
         min_p<-min(as.numeric(sum$p.value), na.rm = TRUE)
         if(is.infinite(min_p)){min_p<-NA}
         temp_p_vals<-rep(NA, (degree_PolyReg+1))
-        temp_p_vals[1:length(all_p_vals)]<-all_p_vals
+        temp_p_vals[seq_len(length(all_p_vals))]<-all_p_vals
         all_p_vals<-temp_p_vals
         row_val<-c(rownames(data)[r], min_p, all_p_vals)
       } else {
@@ -76,7 +76,7 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
         min_p<-min(as.numeric(sum$p.value), na.rm = TRUE)
         if(is.infinite(min_p)){min_p<-NA}
         temp_p_vals<-rep(NA, (degree_PolyReg+1))
-        temp_p_vals[1:length(all_p_vals)]<-all_p_vals
+        temp_p_vals[seq_len(length(all_p_vals))]<-all_p_vals
         all_p_vals<-temp_p_vals
         row_val<-c(rownames(data)[r], min_p, all_p_vals)
       } else {
@@ -87,16 +87,17 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
   }
   parallel::stopCluster(cl)
 
-  all_cond_pvals<-res_frame[,(3:ncol(res_frame))]
+  all_cond_pvals<-res_frame[,c(3:ncol(res_frame))]
   if(any(is.nan(all_cond_pvals))){all_cond_pvals[which(is.nan(all_cond_pvals))]=NA}
   if(any(all_cond_pvals=="NaN", na.rm = TRUE)){all_cond_pvals[which(all_cond_pvals=="NaN")]=NA}
 
   rownames(all_cond_pvals)<-rownames(data)
-  all_cond_pvals=data.frame(all_cond_pvals, stringsAsFactors = FALSE)
-  for(c in 1:ncol(all_cond_pvals)){all_cond_pvals[,c]<-as.numeric(as.character(all_cond_pvals[,c]))}
-  colnames(all_cond_pvals)=c("intercept", paste("degree", seq(1:degree_PolyReg)))
+  all_cond_pvals<-data.frame(all_cond_pvals, stringsAsFactors = FALSE)
+  #for(c in seq_len(ncol(all_cond_pvals))){all_cond_pvals[,c]<-as.numeric(as.character(all_cond_pvals[,c]))}
+  all_cond_pvals<-data.frame(apply(all_cond_pvals, 2, function(x) {as.numeric(as.character(x))}), check.names = FALSE)
+  colnames(all_cond_pvals)=c("intercept", paste("degree", seq_len(degree_PolyReg)))
 
-  res_frame=res_frame[,c(1:2)]
+  res_frame=res_frame[,c(seq_len(2))]
   res_frame<-data.frame(res_frame, stringsAsFactors = FALSE)
   rownames(res_frame)<-rownames(data)
   colnames(res_frame)<-c("id","rep p-value")

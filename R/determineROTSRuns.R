@@ -8,10 +8,10 @@ determineROTSRuns<-function(data, des_matrix, min_comm_diff){
   combs=matrix(nrow = 0, ncol = 2)
   colnames(combs)=unique_conditions
 
-  for(indc1 in 1:length(inds_condition1)){
+  for(indc1 in seq_len(length(inds_condition1))){
     temp_rows1=which(des_matrix$Individual%in%inds_condition1[indc1])
     temp_time1=as.numeric(as.character(des_matrix$Timepoint[temp_rows1]))
-    for(indc2 in 1:length(inds_condition2)){
+    for(indc2 in seq_len(length(inds_condition2))){
       temp_rows2=which(des_matrix$Individual%in%inds_condition2[indc2])
       temp_time2=as.numeric(as.character(des_matrix$Timepoint[temp_rows2]))
       temp_common_time=getLengthCommonTimepoints(temp_time1 = temp_time1, temp_time2 = temp_time2)
@@ -42,7 +42,7 @@ determineROTSRuns<-function(data, des_matrix, min_comm_diff){
   #determine the individuals from each condition for each run
   all_pos_combs<-matrix(nrow=2, ncol = 0)
   temp_mat<-rbind(inds_condition1, inds_condition2)
-  for(run in 1:nr_ROTS_runs){
+  for(run in seq_len(nr_ROTS_runs)){
     row1<-temp_mat[1,]
     row2<-temp_mat[2,]
     locs_na<-which(is.na(temp_mat), arr.ind <- TRUE)
