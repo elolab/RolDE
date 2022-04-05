@@ -48,20 +48,12 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
     groups_for_rots<-sort(rep(seq(1:(nr_timepoints)),replicate_comparisons))
 
     #Get the sample locations (columns) for the individuals in the comparisons for the current run.
-    control_locs<-list()
-    case_locs<-list()
+    control_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[1])})))
+    case_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[2])})))
 
     #Store the timepoints for each individual in each comparison here
-    times_control<-list()
-    times_case<-list()
-
-    for(comp in 1:ncol(run_comparisons)){ #Case stays always the same, control changes. Shouldn't make a large difference?
-      control_locs[[comp]]<-which(des_matrix$Individual%in%run_comparisons[1,comp])
-      case_locs[[comp]]<-which(des_matrix$Individual%in%run_comparisons[2,comp])
-
-      times_control[[comp]]=des_matrix$Timepoint[control_locs[[comp]]]
-      times_case[[comp]]=des_matrix$Timepoint[case_locs[[comp]]]
-    }
+    times_control<-lapply(control_locs, function(x) {des_matrix$Timepoint[x]})
+    times_case<-lapply(case_locs, function(x) {des_matrix$Timepoint[x]})
 
     #A dataframe to store the expression level differences in.
     diff_frame<-data.frame(matrix(nrow = nrow(data), ncol = replicate_comparisons*nr_timepoints))
@@ -91,15 +83,12 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
     }
 
     #Check how many non-missing difference values each feature has in each group.
-    na_values<-matrix(nrow = nrow(diff_frame), ncol = length(unique(groups_for_rots)))
-
-    for(r in 1:nrow(diff_frame)){
-      for(group in 1:length(unique(groups_for_rots))){
-        vals=as.numeric(diff_frame[r, which(groups_for_rots==group)])
-        if(length(which(!is.na(vals)))>=2){na_values[r,group]=1
-        }else{na_values[r,group]=0}
-      }
-    }
+    na_values<-t(apply(diff_frame, 1, function(x){
+      unlist(lapply(unique(groups_for_rots), function(z){
+        vals=as.numeric(x[which(groups_for_rots==z)])
+        if(length(which(!is.na(vals)))>=2){1}else{0}
+      }))
+    }))
 
     rem_feat=which(rowSums(na_values)<1) #Check if a feature has not a single valid group for ROTS. Then remove it.
 
@@ -121,19 +110,13 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
     #get enough quantile values used for imputation
     all_quant_vals<-quantile(all_num_values, seq(from=0.001, to=1, by=0.001))
 
-    for(r in 1:nrow(diff_frame)){
-      row<-diff_frame[r,]
-      diff_frame[r,]<-fillGaps_New(all_quant_vals = all_quant_vals, row = row, groups_for_rots = groups_for_rots)
-    }
+    diff_frame<-data.frame(t(apply(diff_frame, 1, function(x) {fillGaps_New(all_quant_vals = all_quant_vals, row = x, groups_for_rots = groups_for_rots)})), check.names = FALSE)
 
     #Add a zeroish reference group to compare to.
     ref_group<-data.frame(matrix(nrow = nrow(diff_frame), ncol = length(which(groups_for_rots==1))))
 
     #Fill compeletely in with random values from the distribution of all differences
-    for(r in 1:nrow(ref_group)){
-      row<-ref_group[r,]
-      ref_group[r,]<-fillGapsAll_New(all_quant_vals = all_quant_vals, row = row)
-    }
+    ref_group<-data.frame(t(apply(ref_group, 1, function(x) {fillGapsAll_New(all_quant_vals = all_quant_vals, row = x)})), check.names = FALSE)
 
     #Make a new dataset and update groups for ROTS
     diff_new<-cbind(diff_frame, ref_group)

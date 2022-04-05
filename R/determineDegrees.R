@@ -11,12 +11,10 @@ determineDegrees<-function(des_matrix, degree_RegROTS, degree_PolyReg){
 
   unique_individuals<-unique(as.numeric(as.character(des_matrix[,4])))
 
-  individual_timepoints<-numeric(length(unique_individuals))
-
-  for(ind in 1:length(unique_individuals)){
-    ind_locs<-which(as.numeric(as.character(des_matrix[,4]))==unique_individuals[ind])
-    individual_timepoints[ind]<-length(unique(as.numeric(as.character(des_matrix[ind_locs,3]))))
-  }
+  individual_timepoints<-unlist(lapply(unique_individuals, function(x) {
+    ind_locs<-which(as.numeric(as.character(des_matrix[,4]))==x)
+    length(unique(as.numeric(as.character(des_matrix[ind_locs,3]))))
+  }))
 
   if(degree_PolyReg=="auto"){
     degree_PolyReg<-min((median(as.numeric(individual_timepoints))-1), 5)

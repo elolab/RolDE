@@ -53,14 +53,9 @@ estSigValNonAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyre
   #distribution.
   all_simrps=as.numeric(unlist(sim_rps))
   rank_prods<-as.numeric(as.character(rank_products[,2]))
-  estSigVals=numeric(length(rank_prods))
-  for(i in 1:length(estSigVals)){
-    if(is.na(rank_prods[i])){
-      estSigVals[i]=NA
-    }else{
-      estSigVals[i]=length(which(all_simrps<=rank_prods[i]))/length(na.omit(all_simrps))
-    }
-  }
+  estSigVals<-unlist(lapply(rank_prods, function(x){
+    if(is.na(x)){NA}else{length(which(all_simrps<=x))/length(na.omit(all_simrps))}
+  }))
 
   if(sig_adj_meth=="qvalue"){
     estAdjSigVal<-qvalue::qvalue(estSigVals)

@@ -14,41 +14,25 @@ shifter <- function(x, n = 1) {
 #freedom for statistical testing, i.e. so that each individual is used only once
 #in each run. Make the sizes of the runs as balanced as possible.
 getUniqueCombRunsNew<-function(real_combs, unique_conditions){
-  test_mat<-matrix(nrow = length(real_combs), ncol=2)
-  for(i in 1:nrow(test_mat)){
-    temp<-as.numeric(unlist(strsplit(real_combs[i], ",")[[1]]))
-    test_mat[i,]<-temp
-  }
+  test_mat<-lapply(real_combs, function(x){
+    temp<-as.numeric(unlist(strsplit(x, ",")[[1]]))
+  })
+  test_mat<-matrix(unlist(test_mat), ncol=2, byrow = TRUE)
 
   real_ind_cond1<-unique(test_mat[,1])
   real_ind_cond2<-unique(test_mat[,2])
 
-  lengths1<-numeric(length(real_ind_cond1))
-  for(i in 1:length(lengths1)){
-    lengths1[i]<-length(which(test_mat[,1]==real_ind_cond1[i]))
-  }
-
+  lengths1<-unlist(lapply(real_ind_cond1, function(x){length(which(test_mat[,1]==x))}))
   names(lengths1)<-real_ind_cond1
 
-  lengths2<-numeric(length(real_ind_cond2))
-  for(i in 1:length(lengths2)){
-    lengths2[i]<-length(which(test_mat[,2]==real_ind_cond2[i]))
-  }
-
+  lengths2<-unlist(lapply(real_ind_cond2, function(x){length(which(test_mat[,2]==x))}))
   names(lengths2)<-real_ind_cond2
 
   min_comps<-max(lengths1, lengths2)
 
-  temp_list<-list()
-  for(i in 1:min_comps){
-    temp_list[[i]]<-matrix(nrow=2, ncol=0)
-  }
+  temp_list<-lapply(seq_len(min_comps), function(x){matrix(nrow=2, ncol=0)})
 
-  used_inds=list()
-  for(i in 1:min_comps){
-    temp_vals=matrix(nrow=2, ncol=0)
-    used_inds[[i]]=temp_vals
-  }
+  used_inds<-lapply(seq_len(min_comps), function(x){matrix(nrow=2, ncol=0)})
 
   all_lengths<-c(lengths1, lengths2)
   all_lengths<-sort(all_lengths, decreasing = TRUE)
@@ -127,9 +111,9 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
     }
   }
 
-  for(i in 1:length(temp_list)){
-    rownames(temp_list[[i]])<-unique_conditions
-  }
+  temp_list<-lapply(temp_list, function(x) {
+    rownames(x)<-unique_conditions
+    x})
 
   return(temp_list)
 }
@@ -137,17 +121,20 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
 #Function to fill in missing values, only fill if a row has less than 2 missing values per group.
 #Do not impute more than two values per group for a row.
 fillGaps_New<-function(all_quant_vals, row, groups_for_rots){
-  for(group in 1:max(groups_for_rots)){
-    locs_na<-which(is.na(row[which(groups_for_rots==group)]))
-    locs_nonna<-which(!is.na(row[which(groups_for_rots==group)]))
+  row2<-unlist(lapply(seq_len(max(groups_for_rots)), function(x){
+    locs_na<-which(is.na(row[which(groups_for_rots==x)]))
+    locs_nonna<-which(!is.na(row[which(groups_for_rots==x)]))
+
+    row_vals<-row[which(groups_for_rots==x)]
     if(length(locs_nonna)<2){
       imp.num<-2-length(locs_nonna)
       vals<-sample(1:1000, length(imp.num), replace = TRUE)
       vals<-all_quant_vals[vals]
-      row[which(groups_for_rots==group)][locs_na][1:imp.num]<-vals
+      row_vals[locs_na][1:imp.num]<-vals
     }
-  }
-  return(row)
+    row_vals
+  }))
+  return(row2)
 }
 
 #Fill in all gaps in in a row.
@@ -158,7 +145,6 @@ fillGapsAll_New<-function(all_quant_vals, row){
   row[locs_na]=vals
   return(row)
 }
-
 
 #Get a rank for a simulated p value based on the experimental data.
 #p is the pvalues from the experiment, e.g, from a single rots run, a vector.

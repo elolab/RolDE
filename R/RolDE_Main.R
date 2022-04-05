@@ -186,6 +186,8 @@
 #'@export
 #'@examples
 #'#Usage of RolDE in time point aligned data without significance value estimation and 1 core
+#'data("data2")
+#'data("des_matrix2")
 #'set.seed(1) #For reproducibility.
 #'data2.res<-RolDE_Main(data=data2, des_matrix=des_matrix2, n_cores=1, sigValSampN = 0)
 RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", min_feat_obs=3, degree_RegROTS="auto", degree_PolyReg="auto", n_cores=1, model_type="auto", sigValSampN=500000, sig_adj_meth="fdr"){

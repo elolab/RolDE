@@ -60,15 +60,12 @@ determineROTSRuns<-function(data, des_matrix, min_comm_diff){
   }
 
   #validate which of all the possible combinations are possible to be realized based on enough timepoints in common range
-  all_combs_one<-character(ncol(all_pos_combs))
-  for(co in 1:ncol(all_pos_combs)){all_combs_one[co]<-paste(all_pos_combs[,co], collapse = ",")}
+  all_combs_one<-apply(all_pos_combs, 2, function(x) paste(x, collapse = ","))
 
-  pos_combs_one<-character(nrow(combs))
-  for(r in 1:nrow(combs)){pos_combs_one[r]<-paste(combs[r,], collapse = ",")}
+  pos_combs_one<-apply(combs, 1, function(x) paste(x, collapse = ","))
 
   #realized combinations from all possible combinations
-  real_combs<-character()
-  for(com in 1:length(all_combs_one)){if(all_combs_one[com]%in%pos_combs_one){real_combs<-c(real_combs,all_combs_one[com])}}
+  real_combs<-unlist(lapply(all_combs_one, function(x) {if(x%in%pos_combs_one){x}}))
 
   #divide into rots runs, make runs as equally sized as possible.
   rots_runs<-getUniqueCombRunsNew(real_combs = real_combs, unique_conditions = unique_conditions)

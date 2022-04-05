@@ -18,6 +18,7 @@
 #' @importFrom graphics legend lines mtext plot points
 #' @export
 #' @examples
+#' data("res3")
 #'#Plotting the most DE finding. DE results are in the res3 object.
 #'plotFindings(file_name = NULL, RolDE_res = res3, top_n = 1)
 

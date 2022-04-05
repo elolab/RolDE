@@ -79,26 +79,31 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
   }
 
   #check that each individual has enough timepoints
-  individual_timepoints<-numeric(length(unique_individuals))
-  for(ind in 1:length(unique_individuals)){
-    ind_locs<-which(as.numeric(as.character(des_matrix[,4]))==unique_individuals[ind])
-    individual_timepoints[ind]<-length(unique(as.numeric(as.character(des_matrix[ind_locs,3]))))
-  }
+  individual_timepoints<-unlist(lapply(unique_individuals, function(x) {
+    ind_locs<-which(as.numeric(as.character(des_matrix[,4]))==x)
+    length(unique(as.numeric(as.character(des_matrix[ind_locs,3]))))
+  }))
 
   if(any(individual_timepoints<3)){
     stop("Some individual have less than three time points in the design matrix. Please remove such individuals, longitudinal analysis not meaningful.")
   }
 
   #Determine that each condition has enough individuals. Enough timepoints per individual already checked.
-  individuals_in_condition<-numeric(2)
-
-  for(cond in 1:2){
-    cond_locs<-which(as.character(des_matrix[,2])==unique_conditions[cond])
-    individuals_in_condition[cond]<-length(unique(as.numeric(as.character(des_matrix[cond_locs,4]))))
-  } #end for loop
+  individuals_in_condition<-unlist(lapply(unique_conditions, function(x) {
+    cond_locs<-which(as.character(des_matrix[,2])==x)
+    length(unique(as.numeric(as.character(des_matrix[cond_locs,4]))))
+  }))
 
   if(any(individuals_in_condition<2)){
     stop("Either condition does not have at least 2 replicates (individuals). Differential expression analysis not meaningful.")
+  }
+
+  #Validate that if timepoints should be aligned, they truly are
+  if(aligned){
+    if(!all(sort(unique(des_matrix[which(des_matrix[,2]%in%unique_conditions[1]),3]))==
+            sort(unique(des_matrix[which(des_matrix[,2]%in%unique_conditions[2]),3])))){
+      stop("Timepoints indicated as aligned but different timepoints in conditions")
+    }
   }
 
   #Design matrix is good, proceed

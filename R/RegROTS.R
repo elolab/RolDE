@@ -123,20 +123,12 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
     groups_for_rots<-sort(rep(seq(1:(degree+1)),replicate_comparisons))
 
     #Get the sample locations (columns) for the individuals in the comparisons for the current run.
-    control_locs<-list()
-    case_locs<-list()
+    control_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[1])})))
+    case_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[2])})))
 
     #Store the timepoints for each individual in each comparison here
-    times_control<-list()
-    times_case<-list()
-
-    for(comp in 1:ncol(run_comparisons)){
-      control_locs[[comp]]<-which(des_matrix$Individual%in%run_comparisons[1,comp])
-      case_locs[[comp]]<-which(des_matrix$Individual%in%run_comparisons[2,comp])
-
-      times_control[[comp]]=des_matrix$Timepoint[control_locs[[comp]]]
-      times_case[[comp]]=des_matrix$Timepoint[case_locs[[comp]]]
-    }
+    times_control<-lapply(control_locs, function(x) {des_matrix$Timepoint[x]})
+    times_case<-lapply(case_locs, function(x) {des_matrix$Timepoint[x]})
 
     #A data frame to save the coefficient differences in.
     coef_frame<-data.frame(matrix(nrow = nrow(data), ncol = replicate_comparisons*(degree+1)))
@@ -168,26 +160,24 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
     } #end getting coefficients for rows
 
     #Scale the coefficients differences within each group to acquire similar distributions for correct testing in ROTS
-    coef_scaled<-data.frame(matrix(nrow = nrow(coef_frame), ncol = ncol(coef_frame)))
+    coef_temp<-lapply(unique(groups_for_rots), function(x){
+      data_temp1<-coef_frame[, which(groups_for_rots==x)]
+      data_temp2<-as.numeric(unlist(data_temp1))
+      data_temp2<-data_temp2/sd(data_temp2, na.rm = TRUE)
+      data_temp1[,c(1:ncol(data_temp1))]<-data_temp2
+      data_temp1
+    })
+
+    coef_scaled=do.call(cbind, coef_temp)
     rownames(coef_scaled)<-rownames(coef_frame)
     colnames(coef_scaled)<-colnames(coef_frame)
-
-    for(group in 1:max(groups_for_rots)){
-      data_temp<-coef_frame[, which(groups_for_rots==group)]
-      data_temp<-as.numeric(unlist(data_temp))
-      data_temp<-data_temp/sd(data_temp, na.rm = TRUE)
-      coef_scaled[,which(groups_for_rots==group)]<-data_temp
-    }
 
     #Remove features with noth enough values in the first two groups, intercept (expression) level
     #differences and differences in longitudinal linear patterns of expression.
     #Require at least two values for group, 2 required for ROTS.
-    rem_feat<-numeric(0)
-    for(group in 1:2){ #so we need to remove those that have too many nas in group 1 or 2
-      rem_feat<-c(rem_feat,which(apply(coef_scaled[,which(groups_for_rots==group)], 1, function(x) (sum(!is.na(x))<2))))
-    }
-
-    rem_feat<-unique(rem_feat)
+    rem_feat<-unique(unlist(lapply(seq_len(2), function(z){
+      which(apply(coef_scaled[,which(groups_for_rots==z)], 1, function(x) (sum(!is.na(x))<2)))
+    })))
 
     #Save and remove the possible removed features
     if(length(rem_feat)>0){
@@ -210,19 +200,13 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
     #get enough quantile values used for imputation
     all_quant_vals<-quantile(all_num_values, seq(from=0.001, to=1, by=0.001))
 
-    for(r in 1:nrow(coef_scaled)){
-      row<-coef_scaled[r,]
-      coef_scaled[r,]<-fillGaps_New(all_quant_vals = all_quant_vals, row = row, groups_for_rots = groups_for_rots)
-    }
+    coef_scaled<-data.frame(t(apply(coef_scaled, 1, function(x) {fillGaps_New(all_quant_vals = all_quant_vals, row = x, groups_for_rots = groups_for_rots)})), check.names = FALSE)
 
     #Add a zeroish reference group to compare to.
     ref_group<-data.frame(matrix(nrow = nrow(coef_scaled), ncol = length(which(groups_for_rots==1))))
 
     #Fill compeletely in with random values from the distribution of all differences
-    for(r in 1:nrow(ref_group)){
-      row<-ref_group[r,]
-      ref_group[r,]<-fillGapsAll_New(all_quant_vals = all_quant_vals, row = row)
-    }
+    ref_group<-data.frame(t(apply(ref_group, 1, function(x) {fillGapsAll_New(all_quant_vals = all_quant_vals, row = x)})), check.names = FALSE)
 
     #Make a new dataset and update groups for ROTS
     coef_new<-cbind(coef_scaled, ref_group)
