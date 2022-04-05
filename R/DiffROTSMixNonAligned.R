@@ -6,7 +6,7 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
   control<-unique_conditions[1]
   case<-unique_conditions[2]
 
-  rots_frame=matrix(nrow = nrow(data), ncol = degree_PolyReg+1)
+  rots_frame<-matrix(nrow = nrow(data), ncol = degree_PolyReg+1)
   d<-NULL
   cl <- parallel::makeCluster(n_cores)
   doParallel::registerDoParallel(cl)
@@ -70,8 +70,8 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
         }
       }
       if(!is.null(mod1)){
-        resid=mod1$residuals[,1] #use fixed effects residuals, mixed effects residuals don't seem to work good. And random effects used already in the estimation of the fixed effects as well.
-        resid_frame[r,match(names(resid), colnames(resid_frame))]=resid
+        resid<-mod1$residuals[,1] #use fixed effects residuals, mixed effects residuals don't seem to work good. And random effects used already in the estimation of the fixed effects as well.
+        resid_frame[r,match(names(resid), colnames(resid_frame))]<-resid
       }
     } #end for loop get resid frame
     ###DO ROTS
@@ -79,14 +79,14 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
     groups_for_rots[which(des_matrix$Condition==case)]<-1
 
     ###remove features with too few observations
-    nas1=apply(resid_frame[,which(groups_for_rots==0)], 1, function(x) length(which(!is.na(x))))
-    nas2=apply(resid_frame[,which(groups_for_rots==1)], 1, function(x) length(which(!is.na(x))))
-    rems1=which(nas1<2) #Should this be larger than 2? Seems pretty tolerant.
-    rems2=which(nas2<2)
-    rems=c(rems1, rems2)
-    rems=unique(rems)
+    nas1<-apply(resid_frame[,which(groups_for_rots==0)], 1, function(x) length(which(!is.na(x))))
+    nas2<-apply(resid_frame[,which(groups_for_rots==1)], 1, function(x) length(which(!is.na(x))))
+    rems1<-which(nas1<2) #Should this be larger than 2? Seems pretty tolerant.
+    rems2<-which(nas2<2)
+    rems<-c(rems1, rems2)
+    rems<-unique(rems)
     if(length(rems)>0){
-      resid_frame=resid_frame[-rems,]
+      resid_frame<-resid_frame[-rems,]
     }
 
     suppressMessages(expr <- {rots_out<-ROTS::ROTS(data = resid_frame, groups = groups_for_rots, B = 100, K = nrow(resid_frame)/4, paired = FALSE, progress = FALSE)})
@@ -99,8 +99,8 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
     res_mat
   }
   parallel::stopCluster(cl)
-  rownames(rots_frame)=rownames(data)
-  colnames(rots_frame)=c(0, seq_len(degree_PolyReg))
+  rownames(rots_frame)<-rownames(data)
+  colnames(rots_frame)<-c(0, seq_len(degree_PolyReg))
 
   #Combine the result from different degrees
   combin_fun<-"min" #minimum the default. Should alternatives be allowed? Rank product? Not allowed right now. CHECK!
@@ -115,7 +115,7 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
   fin_res[,2]<-as.numeric(as.character(fin_res[,2]))
 
   if(all(is.na(fin_res[,2]))){stop("Unkown error during DiffROTS.")} #Problem is that we have a lot of zeros with ROTS this way.
-  ret_list=list(rots_frame, fin_res)
+  ret_list<-list(rots_frame, fin_res)
   names(ret_list)<-c("all cond p-values", "rep p-values")
   return(ret_list)
 }

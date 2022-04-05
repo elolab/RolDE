@@ -10,10 +10,10 @@ calculateRP<-function(res_regrots, res_diffrots, res_polyreg){
   ranks<-cbind(r1, r2, r3)
   rownames(ranks)<-rownames(res_regrots)
 
-  rank_prods=exp(rowMeans(log(ranks), na.rm = TRUE))
+  rank_prods<-exp(rowMeans(log(ranks), na.rm = TRUE))
 
   if(any(is.nan(rank_prods))){rank_prods[is.nan(rank_prods)]<-NA}
-  if(any(rank_prods=="NaN", na.rm = TRUE)){rank_prods[which(rank_prods=="NaN")]=NA}
+  if(any(rank_prods=="NaN", na.rm = TRUE)){rank_prods[which(rank_prods=="NaN")]<-NA}
 
   fin_res<-cbind(id=names(rank_prods), rp=rank_prods)
   fin_res<-data.frame(fin_res, stringsAsFactors = FALSE)

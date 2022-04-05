@@ -18,20 +18,20 @@ determineDegrees<-function(des_matrix, degree_RegROTS, degree_PolyReg){
 
   if(degree_PolyReg=="auto"){
     degree_PolyReg<-min((median(as.numeric(individual_timepoints))-1), 5)
-    if(degree_PolyReg<2){degree_PolyReg=2}
+    if(degree_PolyReg<2){degree_PolyReg<-2}
   }
 
   if(degree_RegROTS=="auto"){
     degree_RegROTS<-min(floor(median(as.numeric(individual_timepoints))/2), 4)
-    if(degree_RegROTS<1){degree_RegROTS=1}
+    if(degree_RegROTS<1){degree_RegROTS<-1}
   }
 
   if(degree_RegROTS>=degree_PolyReg){
     message("Warning! The degree for RegROTS as large or larger than the degree for PolyReg. Smaller degree recommended for RegROTS than for PolyReg.")
   }
 
-  return_list=list(degree_RegROTS, degree_PolyReg)
-  names(return_list)=c("Degree_RegROTS", "Degree_PolyReg")
+  return_list<-list(degree_RegROTS, degree_PolyReg)
+  names(return_list)<-c("Degree_RegROTS", "Degree_PolyReg")
   return(return_list)
 }
 

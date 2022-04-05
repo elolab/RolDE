@@ -27,7 +27,7 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
     rownames(temp_data)<-colnames(data)
 
     if(model_type=="mixed0"){ #Baseline or intercept level mixed effects
-      mod1 = tryCatch({
+      mod1 <- tryCatch({
         nlme::lme(Intensity ~ poly(Time, degree = get("degree_PolyReg"))*Condition, random = ~ 1 | Individual,
                   data = temp_data, na.action = na.omit, method = "REML",control = lmeControl(opt = 'optim')) #optim chosen as the optimized, as based on experience, it seems to converge more often than the default.
       }, error = function(e) {
@@ -55,7 +55,7 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
         row_val<-c(rownames(data)[r], NA, rep(NA, (degree_PolyReg+1)))
       }
     } else {
-      mod1 = tryCatch({
+      mod1 <- tryCatch({
         nlme::lme(Intensity ~ poly(Time, degree = get("degree_PolyReg"))*Condition, random = ~ Time | Individual,
                   data = temp_data, na.action = na.omit, method = "REML",control = lmeControl(opt = 'optim', msMaxIter=500)) #For more complex models, increased the maximum number of iterations for the model to converge. Default is 50.
       }, error = function(e) {
@@ -88,16 +88,16 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
   parallel::stopCluster(cl)
 
   all_cond_pvals<-res_frame[,c(3:ncol(res_frame))]
-  if(any(is.nan(all_cond_pvals))){all_cond_pvals[which(is.nan(all_cond_pvals))]=NA}
-  if(any(all_cond_pvals=="NaN", na.rm = TRUE)){all_cond_pvals[which(all_cond_pvals=="NaN")]=NA}
+  if(any(is.nan(all_cond_pvals))){all_cond_pvals[which(is.nan(all_cond_pvals))]<-NA}
+  if(any(all_cond_pvals=="NaN", na.rm = TRUE)){all_cond_pvals[which(all_cond_pvals=="NaN")]<-NA}
 
   rownames(all_cond_pvals)<-rownames(data)
   all_cond_pvals<-data.frame(all_cond_pvals, stringsAsFactors = FALSE)
   #for(c in seq_len(ncol(all_cond_pvals))){all_cond_pvals[,c]<-as.numeric(as.character(all_cond_pvals[,c]))}
   all_cond_pvals<-data.frame(apply(all_cond_pvals, 2, function(x) {as.numeric(as.character(x))}), check.names = FALSE)
-  colnames(all_cond_pvals)=c("intercept", paste("degree", seq_len(degree_PolyReg)))
+  colnames(all_cond_pvals)<-c("intercept", paste("degree", seq_len(degree_PolyReg)))
 
-  res_frame=res_frame[,c(seq_len(2))]
+  res_frame<-res_frame[,c(seq_len(2))]
   res_frame<-data.frame(res_frame, stringsAsFactors = FALSE)
   rownames(res_frame)<-rownames(data)
   colnames(res_frame)<-c("id","rep p-value")
@@ -106,7 +106,7 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
 
   if(all(is.na(res_frame[,2]))){stop("Unkown error during Polyreg.")}
 
-  ret_list=list(all_cond_pvals, res_frame)
+  ret_list<-list(all_cond_pvals, res_frame)
   names(ret_list)<-c("all cond p-values", "rep p-values")
 
   return(ret_list)

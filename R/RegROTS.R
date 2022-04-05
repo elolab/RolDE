@@ -111,7 +111,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
     return(diffs)
   }
   run<-NULL
-  rots_res_frame=matrix(nrow=nrow(data), ncol = length(rots_runs))
+  rots_res_frame<-matrix(nrow=nrow(data), ncol = length(rots_runs))
 
   #Parallel run - always, in case of sequential, the backend will be registered only with 1 thread (n_cores=1)
   cl <- parallel::makeCluster(n_cores)
@@ -153,7 +153,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
         thres_feat_both_cond<-(length(time_control)+length(time_case))-4 #Internal threshold. Guarantees the filtering away extreme scenarios. Doesn't really play a role? To be removed in the future?
 
         res_vals<-getCoef(r1 = row_case, r2 = row_control, time1 = time_case, time2 = time_control, degree = degree, thres_feat_both_cond = thres_feat_both_cond, min_feat_obs = min_feat_obs, aligned = aligned)
-        res_row[seq(from=comp, to=length(res_row), by=replicate_comparisons)]=res_vals
+        res_row[seq(from=comp, to=length(res_row), by=replicate_comparisons)]<-res_vals
 
       } #end comparison loop
       coef_frame[r,]<-res_row
@@ -168,7 +168,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
       data_temp1
     })
 
-    coef_scaled=do.call(cbind, coef_temp)
+    coef_scaled<-do.call(cbind, coef_temp)
     rownames(coef_scaled)<-rownames(coef_frame)
     colnames(coef_scaled)<-colnames(coef_frame)
 
@@ -239,8 +239,8 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
   names(rank_prods)<-rownames(rots_res_frame)
 
   fin_res<-cbind(id=names(rank_prods), rp=rank_prods)
-  if(any(is.nan(fin_res[,2]))){fin_res[which(is.nan(fin_res[,2])),2]=NA}
-  if(any(fin_res[,2]=="NaN", na.rm = TRUE)){fin_res[which(fin_res[,2]=="NaN"),2]=NA}
+  if(any(is.nan(fin_res[,2]))){fin_res[which(is.nan(fin_res[,2])),2]<-NA}
+  if(any(fin_res[,2]=="NaN", na.rm = TRUE)){fin_res[which(fin_res[,2]=="NaN"),2]<-NA}
   fin_res<-data.frame(fin_res, stringsAsFactors = FALSE)
   fin_res[,1]<-as.character(fin_res[,1])
   fin_res[,2]<-as.numeric(as.character(fin_res[,2]))

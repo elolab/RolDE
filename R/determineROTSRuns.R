@@ -5,18 +5,18 @@ determineROTSRuns<-function(data, des_matrix, min_comm_diff){
   inds_condition2<-unique(des_matrix$Individual[which(des_matrix$Condition==unique_conditions[2])])
 
   #determine which individual in different conditions have at least min_comm_diff timepoints in their common range.
-  combs=matrix(nrow = 0, ncol = 2)
-  colnames(combs)=unique_conditions
+  combs<-matrix(nrow = 0, ncol = 2)
+  colnames(combs)<-unique_conditions
 
   for(indc1 in seq_len(length(inds_condition1))){
-    temp_rows1=which(des_matrix$Individual%in%inds_condition1[indc1])
-    temp_time1=as.numeric(as.character(des_matrix$Timepoint[temp_rows1]))
+    temp_rows1<-which(des_matrix$Individual%in%inds_condition1[indc1])
+    temp_time1<-as.numeric(as.character(des_matrix$Timepoint[temp_rows1]))
     for(indc2 in seq_len(length(inds_condition2))){
-      temp_rows2=which(des_matrix$Individual%in%inds_condition2[indc2])
-      temp_time2=as.numeric(as.character(des_matrix$Timepoint[temp_rows2]))
-      temp_common_time=getLengthCommonTimepoints(temp_time1 = temp_time1, temp_time2 = temp_time2)
+      temp_rows2<-which(des_matrix$Individual%in%inds_condition2[indc2])
+      temp_time2<-as.numeric(as.character(des_matrix$Timepoint[temp_rows2]))
+      temp_common_time<-getLengthCommonTimepoints(temp_time1 = temp_time1, temp_time2 = temp_time2)
       if(temp_common_time[1]>=min_comm_diff & temp_common_time[2]>=min_comm_diff){
-        combs=rbind(combs, c(inds_condition1[indc1],inds_condition2[indc2]))
+        combs<-rbind(combs, c(inds_condition1[indc1],inds_condition2[indc2]))
       }
     }
   }
@@ -48,11 +48,11 @@ determineROTSRuns<-function(data, des_matrix, min_comm_diff){
     locs_na<-which(is.na(temp_mat), arr.ind <- TRUE)
     locs_na<-as.numeric(locs_na[,2])
     if(length(locs_na)>0){temp_mat<-temp_mat[,-c(locs_na)]}
-    if(!is.matrix(temp_mat)){temp_mat=as.matrix(temp_mat)} #if we have only one comparison
+    if(!is.matrix(temp_mat)){temp_mat<-as.matrix(temp_mat)} #if we have only one comparison
     all_pos_combs<-cbind(all_pos_combs, temp_mat)
 
     if(min_cond==1){
-      row1=shifter(x <- row1, n<-1)
+      row1<-shifter(x <- row1, n<-1)
     }else{
       row2<-shifter(x <- row2, n<-1)
     }

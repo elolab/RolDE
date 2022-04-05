@@ -41,8 +41,8 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
 
   for(ind in seq_len(length(all_lengths))){
     if(names(all_lengths[ind])%in%real_ind_cond1){
-      ind_cond=1
-    }else{ind_cond=2}
+      ind_cond<-1
+    }else{ind_cond<-2}
 
     locs_ind<-which(test_mat[,ind_cond]%in%names(all_lengths[ind]))
     ind_mat<-test_mat[locs_ind,]
@@ -55,7 +55,7 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
         if(ncol(temp_mat)==0){next}
         for(co in seq_len(ncol(temp_mat))){
           if(all(ind_mat[j,]==temp_mat[,co]))
-            found[j]=TRUE
+            found[j]<-TRUE
         }
       }
     }
@@ -63,8 +63,8 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
     ind_mat<-ind_mat[!found,]
     if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
     if(nrow(ind_mat)==0){next}
-    continue=TRUE
-    start_time=Sys.time()
+    continue<-TRUE
+    start_time<-Sys.time()
     stop_ind<-0
     while(continue){
       for(i in start_ind:length(temp_list)){
@@ -72,7 +72,7 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
         if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
         if(nrow(ind_mat)==0){next}
         if(ncol(temp_mat)==0){
-          used_inds[[i]]=cbind(used_inds[[i]], ind_mat[1,])
+          used_inds[[i]]<-cbind(used_inds[[i]], ind_mat[1,])
           temp_mat<-cbind(temp_mat, ind_mat[1,])
           ind_mat<-ind_mat[-1,]
           if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
@@ -81,7 +81,7 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
           }
         }else{
           if(!ind_mat[1,1]%in%used_inds[[i]][1,] & !ind_mat[1,2]%in%used_inds[[i]][2,] ){
-            used_inds[[i]]=cbind(used_inds[[i]], ind_mat[1,])
+            used_inds[[i]]<-cbind(used_inds[[i]], ind_mat[1,])
             temp_mat<-cbind(temp_mat, ind_mat[1,])
             ind_mat<-ind_mat[-1,]
             if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
@@ -105,8 +105,8 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
         start_ind<-1
       }
 
-      if(nrow(ind_mat)==0){continue=FALSE}
-      cur_time=Sys.time()
+      if(nrow(ind_mat)==0){continue<-FALSE}
+      cur_time<-Sys.time()
       if(as.numeric(cur_time-start_time)>300){stop("Error during ROTS run assignment. Could not assign runs.")}
     }
   }
@@ -142,7 +142,7 @@ fillGapsAll_New<-function(all_quant_vals, row){
   locs_na<-which(is.na(row))
   vals<-sample(seq_len(1000), length(locs_na), replace = TRUE)
   vals<-all_quant_vals[vals]
-  row[locs_na]=vals
+  row[locs_na]<-vals
   return(row)
 }
 
@@ -157,7 +157,7 @@ getRank<-function(p,s){
     loc<-which(abs(p - s) == min(abs(p - s), na.rm = TRUE))
     sr<-as.numeric(names(p)[loc])
     if(length(sr)>1){
-      sr=sample(c(sr),1)
+      sr<-sample(c(sr),1)
     }
   }
   return(sr)
@@ -176,13 +176,13 @@ getSimRPsWeights<-function(pvals, sim_p, weights){
     locs_na<-which(is.na(x))
     if(length(locs_na)>0){
       max_sr<-max(sr[-locs_na], na.rm = TRUE)
-      sr[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+      sr[locs_na]<-seq(from=(max_sr+1), length.out = length(locs_na))
     }
     return(sr)
   })
   #sim_rp=apply(est_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
-  sim_rp=exp(matrixStats::rowWeightedMeans(x=log(est_ranks),w = weights,  na.rm = TRUE))
-  if(any(is.nan(sim_rp))){sim_rp[which(is.nan(sim_rp))]=NA}
+  sim_rp<-exp(matrixStats::rowWeightedMeans(x=log(est_ranks),w = weights,  na.rm = TRUE))
+  if(any(is.nan(sim_rp))){sim_rp[which(is.nan(sim_rp))]<-NA}
   return(sim_rp)
 }
 
@@ -196,8 +196,8 @@ getSimPDif<-function(pvals, sim_p){
     sim_sample<-sort(sim_sample)
     sim_sample<-sim_sample[rank_org]
     })
-  sim_pval=apply(est_pvals,1,min,na.rm=TRUE) #now built for minimum.
-  if(any(is.infinite(sim_pval))){sim_pval[which(is.infinite(sim_pval))]=NA}
+  sim_pval<-apply(est_pvals,1,min,na.rm=TRUE) #now built for minimum.
+  if(any(is.infinite(sim_pval))){sim_pval[which(is.infinite(sim_pval))]<-NA}
   return(sim_pval)
 }
 
@@ -209,7 +209,7 @@ getSPPoly<-function(all_p_vals, sim_p, ord_poly, all_cond_pvals){
   #if(any(is.na(all_p_vals))){est_p[which(is.na(all_p_vals))]=NA}
   all_p_sim<-matrix(est_p,nrow = nrow(all_cond_pvals),ncol = ncol(all_cond_pvals))
   p_sim<-apply(all_p_sim, 1, min, na.rm=TRUE)
-  if(any(is.infinite(p_sim))){p_sim[which(is.infinite(p_sim))]=NA}
+  if(any(is.infinite(p_sim))){p_sim[which(is.infinite(p_sim))]<-NA}
   return(p_sim)
 }
 
@@ -229,22 +229,22 @@ getSimRankProdsWeights<-function(reg_rots_pval, diff_rots_pval, polyreg_pval, al
   locs_na<-which(is.na(sim_r1))
   if(length(locs_na)>0){
     max_sr<-max(sim_r1[-locs_na], na.rm = TRUE)
-    sim_r1[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+    sim_r1[locs_na]<-seq(from=(max_sr+1), length.out = length(locs_na))
   }
 
   locs_na<-which(is.na(sim_r2))
   if(length(locs_na)>0){
     max_sr<-max(sim_r2[-locs_na], na.rm = TRUE)
-    sim_r2[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+    sim_r2[locs_na]<-seq(from=(max_sr+1), length.out = length(locs_na))
   }
 
   locs_na<-which(is.na(sim_r3))
   if(length(locs_na)>0){
     max_sr<-max(sim_r3[-locs_na], na.rm = TRUE)
-    sim_r3[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+    sim_r3[locs_na]<-seq(from=(max_sr+1), length.out = length(locs_na))
   }
 
-  sim_ranks=cbind(sim_r1, sim_r2, sim_r3)
+  sim_ranks<-cbind(sim_r1, sim_r2, sim_r3)
   # sim_rank_prods<-apply(sim_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
   sim_rank_prods<-exp(rowMeans(log(sim_ranks), na.rm = TRUE))
 }
@@ -264,22 +264,22 @@ getSimRankProdsNonAlignedWeights<-function(reg_rots_pval, diff_rots_pval, polyre
   locs_na<-which(is.na(sim_r1))
   if(length(locs_na)>0){
     max_sr<-max(sim_r1[-locs_na], na.rm = TRUE)
-    sim_r1[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+    sim_r1[locs_na]<-seq(from=(max_sr+1), length.out = length(locs_na))
   }
 
   locs_na<-which(is.na(sim_r2))
   if(length(locs_na)>0){
     max_sr<-max(sim_r2[-locs_na], na.rm = TRUE)
-    sim_r2[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+    sim_r2[locs_na]<-seq(from=(max_sr+1), length.out = length(locs_na))
   }
 
   locs_na<-which(is.na(sim_r3))
   if(length(locs_na)>0){
     max_sr<-max(sim_r3[-locs_na], na.rm = TRUE)
-    sim_r3[locs_na]=seq(from=(max_sr+1), length.out = length(locs_na))
+    sim_r3[locs_na]<-seq(from=(max_sr+1), length.out = length(locs_na))
   }
 
-  sim_ranks=cbind(sim_r1, sim_r2, sim_r3)
+  sim_ranks<-cbind(sim_r1, sim_r2, sim_r3)
   # sim_rank_prods<-apply(sim_ranks, 1, function(x) exp(mean(log(x), na.rm=T)))
   sim_rank_prods<-exp(rowMeans(log(sim_ranks), na.rm = TRUE))
 }

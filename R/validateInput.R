@@ -34,10 +34,10 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
   if(sigValSampN>10000000){message("Warning! Large sigValSampN. Significance value estimation may take a long time.")}
 
   if(sigValSampN==0){
-    estSigVal=FALSE
+    estSigVal<-FALSE
   }else{
     if(sigValSampN<100000){stop("Too small sigValSampN. Please increase the number.")}
-    estSigVal=TRUE
+    estSigVal<-TRUE
   }
 
   if(sig_adj_meth!="bonferroni" & sig_adj_meth!="holm" & sig_adj_meth!="hochberg" & sig_adj_meth!="hommel" & sig_adj_meth!="BH" & sig_adj_meth!="fdr" & sig_adj_meth!="BY" & sig_adj_meth!="qvalue"){
@@ -60,7 +60,7 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
     stop("Number of conditions wrong in the design matrix. Two conditions needed and allowed.")
   }
 
-  unique_conditions=unique(as.character(des_matrix[,2]))
+  unique_conditions<-unique(as.character(des_matrix[,2]))
 
   if(!all(as.character(des_matrix[,2])%in%unique_conditions)){
     stop("Wrong/missing Condition for some samples in the design matrix. All samples must have valid condition information.")
@@ -107,8 +107,8 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
   }
 
   #Design matrix is good, proceed
-  des_matrix=data.frame(des_matrix, stringsAsFactors = FALSE)
-  colnames(des_matrix)=c("Sample Names", "Condition", "Timepoint", "Individual")
+  des_matrix<-data.frame(des_matrix, stringsAsFactors = FALSE)
+  colnames(des_matrix)<-c("Sample Names", "Condition", "Timepoint", "Individual")
   des_matrix[,1]<-as.character(des_matrix[,1])
   des_matrix[,2]<-as.factor(as.character(des_matrix[,2]))
   des_matrix[,3]<-as.numeric(as.character(des_matrix[,3]))

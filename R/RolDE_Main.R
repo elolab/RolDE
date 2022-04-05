@@ -337,7 +337,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
     #If a problem arises during DiffROTS, halt.
     if(is.null(res_diffrots)){stop("\nError during DiffROTS\n")}
 
-    diffrots_weigths=NA
+    diffrots_weigths<-NA
     diff_rots_pval<-res_diffrots[[1]]
     res_diffrots<-res_diffrots[[2]]
   }
