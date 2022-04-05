@@ -31,7 +31,7 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
   if(!is.numeric(n_cores)){stop("Incorrect n_cores. Numerical value needed.")}
 
   if(!is.numeric(sigValSampN)){stop("Incorrect sigValSampN. Numerical value needed.")}
-  if(sigValSampN>10000000){message("Warning! Large sigValSampN. Significance value estimation may take a long time.")}
+  if(sigValSampN>10000000){message("Caution! Large sigValSampN. Significance value estimation may take a long time.")}
 
   if(sigValSampN==0){
     estSigVal<-FALSE

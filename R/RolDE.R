@@ -172,11 +172,11 @@ RolDE<-function(data, des_matrix=NULL, aligned=TRUE, n_cores=1, model_type="auto
       RolDE_Main(data, des_matrix, aligned, min_comm_diff="auto", min_feat_obs=3, degree_RegROTS="auto", degree_PolyReg="auto", n_cores, model_type, sigValSampN, sig_adj_meth)
     },
     error=function(errorCond){
-      message("Execution halted with the following error:")
+      message("Execution halted with the following problem:")
       message(errorCond)
       return(NULL)
     }
   )
-  if(is.null(results)){stop("\nError during RolDE!\n")}
+  if(is.null(results)){stop("\nFailure during RolDE!\n")}
   return(results)
 } #end function RolDE

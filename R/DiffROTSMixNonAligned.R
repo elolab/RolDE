@@ -114,7 +114,7 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
   fin_res[,1]<-as.character(fin_res[,1])
   fin_res[,2]<-as.numeric(as.character(fin_res[,2]))
 
-  if(all(is.na(fin_res[,2]))){stop("Unkown error during DiffROTS.")} #Problem is that we have a lot of zeros with ROTS this way.
+  if(all(is.na(fin_res[,2]))){stop("Unkown failure during DiffROTS.")} #Problem is that we have a lot of zeros with ROTS this way.
   ret_list<-list(rots_frame, fin_res)
   names(ret_list)<-c("all cond p-values", "rep p-values")
   return(ret_list)

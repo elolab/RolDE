@@ -107,7 +107,7 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
 
       if(nrow(ind_mat)==0){continue<-FALSE}
       cur_time<-Sys.time()
-      if(as.numeric(cur_time-start_time)>300){stop("Error during ROTS run assignment. Could not assign runs.")}
+      if(as.numeric(cur_time-start_time)>300){stop("Failure during ROTS run assignment. Could not assign runs.")}
     }
   }
 

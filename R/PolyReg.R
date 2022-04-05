@@ -75,7 +75,7 @@ PolyReg<-function(data, des_matrix, degree_PolyReg, n_cores){
   res_frame[,1]<-as.character(res_frame[,1])
   res_frame[,2]<-as.numeric(as.character(res_frame[,2]))
 
-  if(all(is.na(res_frame[,2]))){stop("Unkown error during Polyreg.")}
+  if(all(is.na(res_frame[,2]))){stop("Unkown failure during Polyreg.")}
 
   ret_list<-list(all_cond_pvals, res_frame)
   names(ret_list)<-c("all cond p-values", "rep p-values")

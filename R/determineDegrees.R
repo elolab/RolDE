@@ -27,7 +27,7 @@ determineDegrees<-function(des_matrix, degree_RegROTS, degree_PolyReg){
   }
 
   if(degree_RegROTS>=degree_PolyReg){
-    message("Warning! The degree for RegROTS as large or larger than the degree for PolyReg. Smaller degree recommended for RegROTS than for PolyReg.")
+    message("The degree for RegROTS as large or larger than the degree for PolyReg. Smaller degree recommended for RegROTS than for PolyReg.")
   }
 
   return_list<-list(degree_RegROTS, degree_PolyReg)

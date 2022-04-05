@@ -20,7 +20,7 @@ calculateRP<-function(res_regrots, res_diffrots, res_polyreg){
   fin_res[,1]<-as.character(fin_res[,1])
   fin_res[,2]<-as.numeric(as.character(fin_res[,2]))
 
-  if(all(is.na(fin_res[,2]))){stop("Unkown error during Rank Product Calculation.")}
+  if(all(is.na(fin_res[,2]))){stop("Unkown failure during Rank Product Calculation.")}
 
   return(fin_res)
 }

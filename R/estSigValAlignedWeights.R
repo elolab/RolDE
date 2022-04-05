@@ -73,7 +73,7 @@ estSigValAlignedWeights<-function(data, res_regrots, res_diffrots, res_polyreg, 
   fin_res[,3]<-as.numeric(as.character(fin_res[,3]))
   fin_res[,4]<-as.numeric(as.character(fin_res[,4]))
 
-  if(all(is.na(fin_res[,3]))){stop("Unkown error during estimating significance values")}
+  if(all(is.na(fin_res[,3]))){stop("Unkown failure during estimating significance values")}
 
   return(fin_res)
 }

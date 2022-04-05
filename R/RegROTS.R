@@ -245,7 +245,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
   fin_res[,1]<-as.character(fin_res[,1])
   fin_res[,2]<-as.numeric(as.character(fin_res[,2]))
 
-  if(all(is.na(fin_res[,2]))){stop("Unkown error during RegROTS.")}
+  if(all(is.na(fin_res[,2]))){stop("Unkown failure during RegROTS.")}
 
   #make the return list
   ret_list<-list(rots_res_frame, fin_res, weights_runs)
