@@ -222,7 +222,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
   )
 
   #If problems during input validation
-  if(is.null(input_validated)){stop(cat("\nError during input validation\n"))}
+  if(is.null(input_validated)){stop("\nError during input validation\n")}
 
   data<-input_validated[[1]]
   des_matrix<-input_validated[[2]]
@@ -245,7 +245,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
   )
 
   #If problems during run determination
-  if(is.null(rots_runs)){stop(cat("\nError during determining ROTS runs\n"))}
+  if(is.null(rots_runs)){stop("\nError during determining ROTS runs\n")}
   rots_runs<-rots_runs[[1]]
 
   #Validate and determine the degrees.
@@ -261,7 +261,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
   )
 
   #If problems during degree determination
-  if(is.null(method_degrees)){stop(cat("\nError during degree determination\n"))}
+  if(is.null(method_degrees)){stop("\nError during degree determination\n")}
 
   degree_RegROTS<-method_degrees[[1]]
   degree_PolyReg<-method_degrees[[2]]
@@ -281,7 +281,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
   )
 
   #If a problem arises during RegROTS
-  if(is.null(res_regrots)){stop(cat("\nError during RegROTS\n"))}
+  if(is.null(res_regrots)){stop("\nError during RegROTS\n")}
 
   reg_rots_pval<-res_regrots[[1]]
   regrots_weigths<-res_regrots[[3]]
@@ -302,7 +302,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
       }
     )
     #If a problem arises during DiffROTS
-    if(is.null(res_diffrots)){stop(cat("\nError during DiffROTS\n"))}
+    if(is.null(res_diffrots)){stop("\nError during DiffROTS\n")}
 
     diff_rots_pval<-res_diffrots[[1]]
     diffrots_weigths<-res_diffrots[[3]]
@@ -335,7 +335,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
     }
 
     #If a problem arises during DiffROTS, halt.
-    if(is.null(res_diffrots)){stop(cat("\nError during DiffROTS\n"))}
+    if(is.null(res_diffrots)){stop("\nError during DiffROTS\n")}
 
     diffrots_weigths=NA
     diff_rots_pval<-res_diffrots[[1]]
@@ -376,7 +376,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
   }
 
   #If a problem arises during PolyReg
-  if(is.null(res_polyreg)){stop(cat("\nError during PolyReg\n"))}
+  if(is.null(res_polyreg)){stop("\nError during PolyReg\n")}
 
   polyreg_pval<-res_polyreg[[1]]
   res_polyreg<-res_polyreg[[2]]
@@ -394,7 +394,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
     }
   )
 
-  if(is.null(rank_products)){stop(cat("\nError during rank product calculation\n"))}
+  if(is.null(rank_products)){stop("\nError during rank product calculation\n")}
 
   #Estimate signigicance values
   if(estSigVal){
@@ -423,7 +423,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
       )
     }
     fin_res<-rp_with_est_sig
-    if(is.null(fin_res)){stop(cat("\nError during significance value estimation\n"))}
+    if(is.null(fin_res)){stop("\nError during significance value estimation\n")}
   } else {
     fin_res<-rank_products
   }

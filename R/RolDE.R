@@ -177,6 +177,6 @@ RolDE<-function(data, des_matrix=NULL, aligned=TRUE, n_cores=1, model_type="auto
       return(NULL)
     }
   )
-  if(is.null(results)){stop(cat("\nError during RolDE!\n"))}
+  if(is.null(results)){stop("\nError during RolDE!\n")}
   return(results)
 } #end function RolDE
