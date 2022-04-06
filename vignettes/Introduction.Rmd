@@ -1,18 +1,18 @@
 ---
 title: "Introduction to the Robust longitudinal Differential Expression (RolDE) method"
 output:
-  rmarkdown::html_vignette:
-    toc: true
+        rmarkdown::html_vignette:
+                toc: true
 vignette: >
-  %\VignetteIndexEntry{Introduction}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+        %\VignetteIndexEntry{Introduction}
+        %\VignetteEngine{knitr::rmarkdown}
+        %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+        collapse = TRUE,
+        comment = "#>"
 )
 ```
 

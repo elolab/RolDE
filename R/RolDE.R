@@ -155,28 +155,28 @@
 #'data2.res<-RolDE(data=data2, des_matrix=des_matrix2, n_cores=1, sigValSampN = 0)
 RolDE<-function(data, des_matrix=NULL, aligned=TRUE, n_cores=1, model_type="auto", sigValSampN=500000, sig_adj_meth="fdr"){
 
-  if(is(data, "SummarizedExperiment")){
-    des_matrix<-as.matrix(colData(data))
-    data<-as.matrix(assay(data))
-  }
+        if(is(data, "SummarizedExperiment")){
+                des_matrix<-as.matrix(colData(data))
+                data<-as.matrix(assay(data))
+        }
 
-  if(is.null(des_matrix)){
-    if(!is(data, "SummarizedExperiment")){
-      stop("The design matrix argument is NULL and the data is not a SummarizedExperiment instance. Either the data and design matrix needs
-           to be provided separately or together as a SummarizedExperiment object.")
-    }
-  }
+        if(is.null(des_matrix)){
+                if(!is(data, "SummarizedExperiment")){
+                        stop("The design matrix argument is NULL and the data is not a SummarizedExperiment instance. Either the data and design matrix needs
+                        to be provided separately or together as a SummarizedExperiment object.")
+                }
+        }
 
-  results<-tryCatch(
-    {
-      RolDE_Main(data, des_matrix, aligned, min_comm_diff="auto", min_feat_obs=3, degree_RegROTS="auto", degree_PolyReg="auto", n_cores, model_type, sigValSampN, sig_adj_meth)
-    },
-    error=function(errorCond){
-      message("Execution halted with the following problem:")
-      message(errorCond)
-      return(NULL)
-    }
-  )
-  if(is.null(results)){stop("\nFailure during RolDE!\n")}
-  return(results)
+        results<-tryCatch(
+                {
+                        RolDE_Main(data, des_matrix, aligned, min_comm_diff="auto", min_feat_obs=3, degree_RegROTS="auto", degree_PolyReg="auto", n_cores, model_type, sigValSampN, sig_adj_meth)
+                },
+                error=function(errorCond){
+                        message("Execution halted with the following problem:")
+                        message(errorCond)
+                        return(NULL)
+                }
+        )
+        if(is.null(results)){stop("\nFailure during RolDE!\n")}
+        return(results)
 } #end function RolDE

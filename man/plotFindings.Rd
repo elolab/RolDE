@@ -32,6 +32,7 @@ or multiple top findings as indicated by the \code{top_n}. The findings can be p
 The given \code{file_name} should have a ".pdf" extension.
 }
 \examples{
+data("res3")
 #Plotting the most DE finding. DE results are in the res3 object.
 plotFindings(file_name = NULL, RolDE_res = res3, top_n = 1)
 }

@@ -192,243 +192,243 @@
 #'data2.res<-RolDE_Main(data=data2, des_matrix=des_matrix2, n_cores=1, sigValSampN = 0)
 RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", min_feat_obs=3, degree_RegROTS="auto", degree_PolyReg="auto", n_cores=1, model_type="auto", sigValSampN=500000, sig_adj_meth="fdr"){
 
-  if(is(data, "SummarizedExperiment")){
-    des_matrix<-as.matrix(colData(data))
-    data<-as.matrix(assay(data))
-  }
-
-  if(is.null(des_matrix)){
-    if(!is(data, "SummarizedExperiment")){
-      stop("The design matrix argument is NULL and the data is not a SummarizedExperiment instance. Either the data and design matrix needs
-           to be provided separately or together as a SummarizedExperiment object.")
-    }
-  }
-
-  #Save input
-  input_list<-list(data, des_matrix, aligned, min_comm_diff, min_feat_obs, degree_RegROTS, degree_PolyReg, n_cores, model_type, sigValSampN, sig_adj_meth)
-  names(input_list)<-c("data", "des_matrix", "aligned", "min_comm_diff", "min_feat_obs", "degree_RegROTS", "degree_PolyReg", "n_cores", "model_type", "sigValSampN", "sig_adj_meth")
-
-  #Validate design matrix and data
-  message("Validating input")
-  input_validated<-tryCatch(
-    {
-      validateInput(data, des_matrix, aligned, min_comm_diff, min_feat_obs, n_cores, model_type, sigValSampN, sig_adj_meth)
-    },
-    error=function(errorCond){
-      message("Execution halted with the following problem:")
-      message(errorCond)
-      return(NULL)
-    }
-  )
-
-  #If problems during input validation
-  if(is.null(input_validated)){stop("\nFailure during input validation\n")}
-
-  data<-input_validated[[1]]
-  des_matrix<-input_validated[[2]]
-  min_comm_diff<-input_validated[[3]]
-  model_type<-input_validated[[4]]
-  estSigVal<-input_validated[[5]]
-  message("Input validated")
-
-  #Determine ROTS runs
-  message("Preparing the Analysis")
-  rots_runs<-tryCatch(
-    {
-      determineROTSRuns(data, des_matrix, min_comm_diff[1])
-    },
-    error=function(errorCond){
-      message("Execution halted with the following problem:")
-      message(errorCond)
-      return(NULL)
-    }
-  )
-
-  #If problems during run determination
-  if(is.null(rots_runs)){stop("\nFailure during determining ROTS runs\n")}
-  rots_runs<-rots_runs[[1]]
-
-  #Validate and determine the degrees.
-  method_degrees<-tryCatch(
-    {
-      determineDegrees(des_matrix, degree_RegROTS, degree_PolyReg)
-    },
-    error=function(errorCond){
-      message("Execution halted with the following problem:")
-      message(errorCond)
-      return(NULL)
-    }
-  )
-
-  #If problems during degree determination
-  if(is.null(method_degrees)){stop("\nFailure during degree determination\n")}
-
-  degree_RegROTS<-method_degrees[[1]]
-  degree_PolyReg<-method_degrees[[2]]
-  #Now we have everything to start running.
-
-  #Run RegROTS
-  message("Running RegROTS")
-  res_regrots<-tryCatch(
-    {
-      RegROTS(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_cores, aligned)
-    },
-    error=function(errorCond){
-      message("Execution halted with the following problem:")
-      message(errorCond)
-      return(NULL)
-    }
-  )
-
-  #If a problem arises during RegROTS
-  if(is.null(res_regrots)){stop("\nFailure during RegROTS\n")}
-
-  reg_rots_pval<-res_regrots[[1]]
-  regrots_weigths<-res_regrots[[3]]
-  res_regrots<-res_regrots[[2]]
-
-  #Run DiffROTS
-  message("Running DiffROTS")
-  if(aligned){
-    #DiffROTS aligned
-    res_diffrots<-tryCatch(
-      {
-        DiffROTSAligned(data, des_matrix, min_comm_diff[2], min_feat_obs, rots_runs, n_cores)
-      },
-      error=function(errorCond){
-        message("Execution halted with the following problem:")
-        message(errorCond)
-        return(NULL)
-      }
-    )
-    #If a problem arises during DiffROTS
-    if(is.null(res_diffrots)){stop("\nFailure during DiffROTS\n")}
-
-    diff_rots_pval<-res_diffrots[[1]]
-    diffrots_weigths<-res_diffrots[[3]]
-    res_diffrots<-res_diffrots[[2]]
-
-  }else{
-    #DiffROTS non aligned
-    if(model_type=="fixed"){ #Use the same parameter for DiffROTSAligned and PolyReg? Or should if be able to controlled separately? CHECK!
-      res_diffrots<-tryCatch(
-        {
-          DiffROTSNonAligned(data, des_matrix, degree_PolyReg, n_cores)
-        },
-        error=function(errorCond){
-          message("Execution halted with the following problem:")
-          message(errorCond)
-          return(NULL)
+        if(is(data, "SummarizedExperiment")){
+                des_matrix<-as.matrix(colData(data))
+                data<-as.matrix(assay(data))
         }
-      ) #end trycatch DiffROTS
-    }else{
-      res_diffrots<-tryCatch(
-        {
-          DiffROTSMixNonAligned(data, des_matrix, degree_PolyReg, n_cores, model_type)
-        },
-        error=function(errorCond){
-          message("Execution halted with the following problem:")
-          message(errorCond)
-          return(NULL)
+
+        if(is.null(des_matrix)){
+                if(!is(data, "SummarizedExperiment")){
+                        stop("The design matrix argument is NULL and the data is not a SummarizedExperiment instance. Either the data and design matrix needs
+                        to be provided separately or together as a SummarizedExperiment object.")
+                }
         }
-      ) #end trycatch DiffROTS
-    }
 
-    #If a problem arises during DiffROTS, halt.
-    if(is.null(res_diffrots)){stop("\nFailure during DiffROTS\n")}
+        #Save input
+        input_list<-list(data, des_matrix, aligned, min_comm_diff, min_feat_obs, degree_RegROTS, degree_PolyReg, n_cores, model_type, sigValSampN, sig_adj_meth)
+        names(input_list)<-c("data", "des_matrix", "aligned", "min_comm_diff", "min_feat_obs", "degree_RegROTS", "degree_PolyReg", "n_cores", "model_type", "sigValSampN", "sig_adj_meth")
 
-    diffrots_weigths<-NA
-    diff_rots_pval<-res_diffrots[[1]]
-    res_diffrots<-res_diffrots[[2]]
-  }
+        #Validate design matrix and data
+        message("Validating input")
+        input_validated<-tryCatch(
+                {
+                        validateInput(data, des_matrix, aligned, min_comm_diff, min_feat_obs, n_cores, model_type, sigValSampN, sig_adj_meth)
+                },
+                error=function(errorCond){
+                        message("Execution halted with the following problem:")
+                        message(errorCond)
+                        return(NULL)
+                }
+        )
 
-  #Add weights to the input list
-  input_list[[length(input_list)+1]]<-regrots_weigths
-  input_list[[length(input_list)+1]]<-diffrots_weigths
-  names(input_list)[c((length(input_list)-1):length(input_list))]<-c("regrots_weights", "diffrots_weights")
+        #If problems during input validation
+        if(is.null(input_validated)){stop("\nFailure during input validation\n")}
 
-  #Run PolyReg
-  message("Running PolyReg")
-  if(model_type=="fixed"){
-    message("Running PolyReg with fixed effects only.")
-    res_polyreg<-tryCatch(
-      {
-        PolyReg(data, des_matrix, degree_PolyReg, n_cores)
-      },
-      error=function(errorCond){
-        message("Execution halted with the following problem:")
-        message(errorCond)
-        return(NULL)
-      }
-    )
-  }else{
-    message("Running PolyReg with mixed effects models.")
-    res_polyreg<-tryCatch(
-      {
-        PolyRegMix(data, des_matrix, degree_PolyReg, n_cores, model_type)
-      },
-      error=function(errorCond){
-        message("Execution halted with the following problem:")
-        message(errorCond)
-        return(NULL)
-      }
-    ) #end trycatch PolyReg
-  }
+        data<-input_validated[[1]]
+        des_matrix<-input_validated[[2]]
+        min_comm_diff<-input_validated[[3]]
+        model_type<-input_validated[[4]]
+        estSigVal<-input_validated[[5]]
+        message("Input validated")
 
-  #If a problem arises during PolyReg
-  if(is.null(res_polyreg)){stop("\nFailure during PolyReg\n")}
+        #Determine ROTS runs
+        message("Preparing the Analysis")
+        rots_runs<-tryCatch(
+                {
+                        determineROTSRuns(data, des_matrix, min_comm_diff[1])
+                },
+                error=function(errorCond){
+                        message("Execution halted with the following problem:")
+                        message(errorCond)
+                        return(NULL)
+                }
+        )
 
-  polyreg_pval<-res_polyreg[[1]]
-  res_polyreg<-res_polyreg[[2]]
+        #If problems during run determination
+        if(is.null(rots_runs)){stop("\nFailure during determining ROTS runs\n")}
+        rots_runs<-rots_runs[[1]]
 
-  #Now we should have everything to calculate the final rank product
-  message("Calculating the final rank product.")
-  rank_products<-tryCatch(
-    {
-      calculateRP(res_regrots, res_diffrots, res_polyreg)
-    },
-    error=function(errorCond){
-      message("Execution halted with the following problem:")
-      message(errorCond)
-      return(NULL)
-    }
-  )
+        #Validate and determine the degrees.
+        method_degrees<-tryCatch(
+                {
+                        determineDegrees(des_matrix, degree_RegROTS, degree_PolyReg)
+                },
+                error=function(errorCond){
+                        message("Execution halted with the following problem:")
+                        message(errorCond)
+                        return(NULL)
+                }
+        )
 
-  if(is.null(rank_products)){stop("\nFailure during rank product calculation\n")}
+        #If problems during degree determination
+        if(is.null(method_degrees)){stop("\nFailure during degree determination\n")}
 
-  #Estimate signigicance values
-  if(estSigVal){
-    message("Estimating significance values.")
-    if(aligned){
-      rp_with_est_sig<-tryCatch(
-        {
-          estSigValAlignedWeights(data, res_regrots, res_diffrots, res_polyreg, reg_rots_pval, diff_rots_pval, polyreg_pval, rank_products, n_cores, sig_adj_meth, sigValSampN, regrots_weigths, diffrots_weigths)
-        },
-        error=function(errorCond){
-          message("Execution halted with the following problem:")
-          message(errorCond)
-          return(NULL)
+        degree_RegROTS<-method_degrees[[1]]
+        degree_PolyReg<-method_degrees[[2]]
+        #Now we have everything to start running.
+
+        #Run RegROTS
+        message("Running RegROTS")
+        res_regrots<-tryCatch(
+                {
+                        RegROTS(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_cores, aligned)
+                },
+                error=function(errorCond){
+                        message("Execution halted with the following problem:")
+                        message(errorCond)
+                        return(NULL)
+                }
+        )
+
+        #If a problem arises during RegROTS
+        if(is.null(res_regrots)){stop("\nFailure during RegROTS\n")}
+
+        reg_rots_pval<-res_regrots[[1]]
+        regrots_weigths<-res_regrots[[3]]
+        res_regrots<-res_regrots[[2]]
+
+        #Run DiffROTS
+        message("Running DiffROTS")
+        if(aligned){
+                #DiffROTS aligned
+                res_diffrots<-tryCatch(
+                        {
+                                DiffROTSAligned(data, des_matrix, min_comm_diff[2], min_feat_obs, rots_runs, n_cores)
+                        },
+                        error=function(errorCond){
+                                message("Execution halted with the following problem:")
+                                message(errorCond)
+                                return(NULL)
+                        }
+                )
+                #If a problem arises during DiffROTS
+                if(is.null(res_diffrots)){stop("\nFailure during DiffROTS\n")}
+
+                diff_rots_pval<-res_diffrots[[1]]
+                diffrots_weigths<-res_diffrots[[3]]
+                res_diffrots<-res_diffrots[[2]]
+
+        }else{
+                #DiffROTS non aligned
+                if(model_type=="fixed"){ #Use the same parameter for DiffROTSAligned and PolyReg? Or should if be able to controlled separately? CHECK!
+                        res_diffrots<-tryCatch(
+                                {
+                                        DiffROTSNonAligned(data, des_matrix, degree_PolyReg, n_cores)
+                                },
+                                error=function(errorCond){
+                                        message("Execution halted with the following problem:")
+                                        message(errorCond)
+                                        return(NULL)
+                                }
+                        ) #end trycatch DiffROTS
+                }else{
+                        res_diffrots<-tryCatch(
+                                {
+                                        DiffROTSMixNonAligned(data, des_matrix, degree_PolyReg, n_cores, model_type)
+                                },
+                                error=function(errorCond){
+                                        message("Execution halted with the following problem:")
+                                        message(errorCond)
+                                        return(NULL)
+                                }
+                        ) #end trycatch DiffROTS
+                }
+
+                #If a problem arises during DiffROTS, halt.
+                if(is.null(res_diffrots)){stop("\nFailure during DiffROTS\n")}
+
+                diffrots_weigths<-NA
+                diff_rots_pval<-res_diffrots[[1]]
+                res_diffrots<-res_diffrots[[2]]
         }
-      )
-    }else{
-      rp_with_est_sig<-tryCatch(
-        {
-          estSigValNonAlignedWeights(data, res_regrots, res_diffrots, res_polyreg, reg_rots_pval, diff_rots_pval, polyreg_pval, rank_products, n_cores, sig_adj_meth, sigValSampN, regrots_weigths)
-        },
-        error=function(errorCond){
-          message("Execution halted with the following problem:")
-          message(errorCond)
-          return(NULL)
-        }
-      )
-    }
-    fin_res<-rp_with_est_sig
-    if(is.null(fin_res)){stop("\nFailure during significance value estimation\n")}
-  } else {
-    fin_res<-rank_products
-  }
 
-  ret_list<-list(fin_res, res_regrots, reg_rots_pval, res_diffrots, diff_rots_pval, res_polyreg, polyreg_pval, rots_runs, method_degrees, input_list)
-  names(ret_list)<-c("RolDE_Results", "RegROTS_Results", "RegROTS_P_Values", "DiffROTS_Results", "DiffROTS_P_Values", "PolyReg_Results", "PolyReg_P_Values", "ROTS_Runs", "Method_Degrees", "Input")
-  return(ret_list)
+        #Add weights to the input list
+        input_list[[length(input_list)+1]]<-regrots_weigths
+        input_list[[length(input_list)+1]]<-diffrots_weigths
+        names(input_list)[c((length(input_list)-1):length(input_list))]<-c("regrots_weights", "diffrots_weights")
+
+        #Run PolyReg
+        message("Running PolyReg")
+        if(model_type=="fixed"){
+                message("Running PolyReg with fixed effects only.")
+                res_polyreg<-tryCatch(
+                        {
+                                PolyReg(data, des_matrix, degree_PolyReg, n_cores)
+                        },
+                        error=function(errorCond){
+                                message("Execution halted with the following problem:")
+                                message(errorCond)
+                                return(NULL)
+                        }
+                )
+        }else{
+                message("Running PolyReg with mixed effects models.")
+                res_polyreg<-tryCatch(
+                        {
+                                PolyRegMix(data, des_matrix, degree_PolyReg, n_cores, model_type)
+                        },
+                        error=function(errorCond){
+                                message("Execution halted with the following problem:")
+                                message(errorCond)
+                                return(NULL)
+                        }
+                ) #end trycatch PolyReg
+        }
+
+        #If a problem arises during PolyReg
+        if(is.null(res_polyreg)){stop("\nFailure during PolyReg\n")}
+
+        polyreg_pval<-res_polyreg[[1]]
+        res_polyreg<-res_polyreg[[2]]
+
+        #Now we should have everything to calculate the final rank product
+        message("Calculating the final rank product.")
+        rank_products<-tryCatch(
+                {
+                        calculateRP(res_regrots, res_diffrots, res_polyreg)
+                },
+                error=function(errorCond){
+                        message("Execution halted with the following problem:")
+                        message(errorCond)
+                        return(NULL)
+                }
+        )
+
+        if(is.null(rank_products)){stop("\nFailure during rank product calculation\n")}
+
+        #Estimate signigicance values
+        if(estSigVal){
+                message("Estimating significance values.")
+                if(aligned){
+                        rp_with_est_sig<-tryCatch(
+                                {
+                                        estSigValAlignedWeights(data, res_regrots, res_diffrots, res_polyreg, reg_rots_pval, diff_rots_pval, polyreg_pval, rank_products, n_cores, sig_adj_meth, sigValSampN, regrots_weigths, diffrots_weigths)
+                                },
+                                error=function(errorCond){
+                                        message("Execution halted with the following problem:")
+                                        message(errorCond)
+                                        return(NULL)
+                                }
+                        )
+                }else{
+                        rp_with_est_sig<-tryCatch(
+                                {
+                                        estSigValNonAlignedWeights(data, res_regrots, res_diffrots, res_polyreg, reg_rots_pval, diff_rots_pval, polyreg_pval, rank_products, n_cores, sig_adj_meth, sigValSampN, regrots_weigths)
+                                },
+                                error=function(errorCond){
+                                        message("Execution halted with the following problem:")
+                                        message(errorCond)
+                                        return(NULL)
+                                }
+                        )
+                }
+                fin_res<-rp_with_est_sig
+                if(is.null(fin_res)){stop("\nFailure during significance value estimation\n")}
+        } else {
+                fin_res<-rank_products
+        }
+
+        ret_list<-list(fin_res, res_regrots, reg_rots_pval, res_diffrots, diff_rots_pval, res_polyreg, polyreg_pval, rots_runs, method_degrees, input_list)
+        names(ret_list)<-c("RolDE_Results", "RegROTS_Results", "RegROTS_P_Values", "DiffROTS_Results", "DiffROTS_P_Values", "PolyReg_Results", "PolyReg_P_Values", "ROTS_Runs", "Method_Degrees", "Input")
+        return(ret_list)
 } #end function RolDE_Main
