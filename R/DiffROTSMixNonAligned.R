@@ -89,7 +89,7 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
       resid_frame<-resid_frame[-rems,]
     }
 
-    suppressMessages(expr <- {rots_out<-ROTS::ROTS(data = resid_frame, groups = groups_for_rots, B = 100, K = nrow(resid_frame)/4, paired = FALSE, progress = FALSE)})
+    rots_out<-ROTS::ROTS(data = resid_frame, groups = groups_for_rots, B = 100, K = nrow(resid_frame)/4, paired = FALSE, progress = FALSE, verbose = FALSE)
     rots_res<-data.frame(d=rots_out$d, p=rots_out$pvalue)
 
     res_mat<-matrix(nrow = nrow(data), ncol = 1)
@@ -103,10 +103,10 @@ DiffROTSMixNonAligned<-function(data, des_matrix, degree_PolyReg, n_cores, model
   colnames(rots_frame)<-c(0, seq_len(degree_PolyReg))
 
   #Combine the result from different degrees
-  combin_fun<-"min" #minimum the default. Should alternatives be allowed? Rank product? Not allowed right now. CHECK!
-  c_func<-get(combin_fun) #minimum now
-  fin_p<-suppressWarnings(apply(rots_frame, 1, function(x) c_func(x, na.rm = TRUE)))
-  fin_p[is.infinite(fin_p)]<-NA
+  fin_p<-apply(rots_frame, 1, function(x) {
+    x<-na.omit(x)
+    if(length(x)>0){min(x, na.rm = TRUE)}else{NA}
+  })
   fin_res<-cbind(id=names(fin_p), p=as.numeric(fin_p))
   fin_res<-data.frame(fin_res, stringsAsFactors = FALSE)
   rownames(fin_res)<-rownames(data)

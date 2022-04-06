@@ -214,7 +214,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
     colnames(coef_new)<-groups_for_rots
 
     #Perform multigroup ROTS
-    suppressMessages(expr = {rots_out<-ROTS::ROTS(data = coef_new, groups = groups_for_rots, B = 100, K = nrow(coef_new)/4, paired = FALSE, progress = FALSE)})
+    rots_out<-ROTS::ROTS(data = coef_new, groups = groups_for_rots, B = 100, K = nrow(coef_new)/4, paired = FALSE, progress = FALSE, verbose = TRUE)
     rots_frame<-data.frame(d=rots_out$d, p=rots_out$pvalue)
 
     res_mat<-matrix(nrow = nrow(data), ncol = 1)

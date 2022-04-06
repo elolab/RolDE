@@ -124,7 +124,7 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
     colnames(diff_new)<-groups_for_rots
 
     #Perform multigroup ROTS
-    suppressMessages(expr = {rots_out<-ROTS::ROTS(data = diff_new, groups = groups_for_rots, B = 100, K = nrow(diff_new)/4, paired = FALSE, progress = FALSE)})
+    rots_out<-ROTS::ROTS(data = diff_new, groups = groups_for_rots, B = 100, K = nrow(diff_new)/4, paired = FALSE, progress = FALSE, verbose=FALSE)
     rots_frame<-data.frame(d=rots_out$d, p=rots_out$pvalue)
 
     res_mat<-matrix(nrow = nrow(data), ncol = 1)
