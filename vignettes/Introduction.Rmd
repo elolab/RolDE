@@ -34,6 +34,15 @@ In the PolyReg module, polynomial regression modelling is used to detect longitu
 
 Finally, to conclusively detect any differential expression, the findings from the different modules are combined using the rank product. For more details about the method, see the original RolDE publication (Valikangas et al.).
 
+## Installation
+
+The latest version of RolDE can be installed from Bioconductor:
+```{r eval=FALSE, results='hide', message=FALSE, warning=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager", repos = "http://cran.us.r-project.org")
+BiocManager::install("RolDE")
+```
+
 ## Applying RolDE in example datasets with aligned time points
 
 First, load the dataset and the design matrix to be used:
