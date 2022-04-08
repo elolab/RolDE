@@ -37,7 +37,7 @@ Finally, to conclusively detect any differential expression, the findings from t
 ## Installation
 
 The latest version of RolDE can be installed from Bioconductor:
-```{r eval=FALSE, results='hide', message=FALSE, warning=FALSE}
+```{r install RolDE, eval=FALSE, message=FALSE, warning=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager", repos = "http://cran.us.r-project.org")
 BiocManager::install("RolDE")
