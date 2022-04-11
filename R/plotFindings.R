@@ -8,8 +8,8 @@
 #' differentially expressed feature will be plotted (e.g \code{top_n}=1 will plot the most differentially expressed feature). If \code{top_n} is a vector of numbers,
 #' the differentially expressed features corresponding to top detections within the given range will be plotted (e.g. \code{top_n}=seq(1:50) will plot the top 50 differentially expressed features).
 #' If more than one feature will be plotted, it is advisable to define a suitable file name in \code{file_name}.
-#' @param col1 a string indicating which color should be used for replicates / individualsin in condition 1. The default is blue.
-#' @param col2 a string indicating which color should be used for replicates / individualsin in condition 2. The default is red.
+#' @param col1 a string indicating which color should be used for Individuals / Reolicates in in condition 1. The default is blue.
+#' @param col2 a string indicating which color should be used for Individuals / Replicates in condition 2. The default is red.
 #' @return \code{plotFindings} Plots the results from the RolDE object.
 
 #' @details The function plots the longitudinal expression of the top RolDE findings. The function can plot either the expression of a single finding
@@ -65,9 +65,9 @@ plotFindings<-function(file_name=NULL, RolDE_res, top_n, col1="blue", col2="red"
                 de_info<-paste("RolDE rank product: ", round(results$`RolDE Rank Product`[j],3), ", estimated significance value (ESV): ", round(results$`Estimated Significance Value`[j],3), ", multiple hypothesis adjusted ESV: ", round(results$`Adjusted Estimated Significance Value`[j],3), sep = "")
                 #Plot by conditions
                 #Condition 1
-                uniq_inds_cond1<-unique(des_plot_cond1$Replicate)
+                uniq_inds_cond1<-unique(des_plot_cond1$Individual)
                 for(i in seq_len(length(uniq_inds_cond1))){
-                        inds_samp<-which(des_plot_cond1$Replicate==uniq_inds_cond1[i])
+                        inds_samp<-which(des_plot_cond1$Individual==uniq_inds_cond1[i])
                         temp_des<-des_plot_cond1[inds_samp,]
                         #order by time
                         temp_des<-temp_des[order(as.numeric(temp_des$Time)),]
@@ -95,9 +95,9 @@ plotFindings<-function(file_name=NULL, RolDE_res, top_n, col1="blue", col2="red"
                 }
 
                 #Condition2
-                uniq_inds_cond2<-unique(des_plot_cond2$Replicate)
+                uniq_inds_cond2<-unique(des_plot_cond2$Individual)
                 for(i in seq_len(length(uniq_inds_cond2))){
-                        inds_samp<-which(des_plot_cond2$Replicate==uniq_inds_cond2[i])
+                        inds_samp<-which(des_plot_cond2$Individual==uniq_inds_cond2[i])
                         temp_des<-des_plot_cond2[inds_samp,]
                         #order by time
                         temp_des<-temp_des[order(as.numeric(temp_des$Time)),]
