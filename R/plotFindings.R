@@ -8,7 +8,7 @@
 #' differentially expressed feature will be plotted (e.g \code{top_n}=1 will plot the most differentially expressed feature). If \code{top_n} is a vector of numbers,
 #' the differentially expressed features corresponding to top detections within the given range will be plotted (e.g. \code{top_n}=seq(1:50) will plot the top 50 differentially expressed features).
 #' If more than one feature will be plotted, it is advisable to define a suitable file name in \code{file_name}.
-#' @param col1 a string indicating which color should be used for Individuals / Reolicates in in condition 1. The default is blue.
+#' @param col1 a string indicating which color should be used for Individuals / Replicates in condition 1. The default is blue.
 #' @param col2 a string indicating which color should be used for Individuals / Replicates in condition 2. The default is red.
 #' @return \code{plotFindings} Plots the results from the RolDE object.
 
