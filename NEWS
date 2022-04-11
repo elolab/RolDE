@@ -1,3 +1,7 @@
+CHANGES IN VERSION 0.99.4
+--------------------------
+	- Updated version dependency to R to 4.2.0.
+
 CHANGES IN VERSION 0.99.3
 --------------------------
 	- Added Bioconductor installation instructions in the Vignette.
@@ -8,7 +12,6 @@ CHANGES IN VERSION 0.99.2
 	- Added a NEWS file.
 	- Added Bioconductor installation instructions in README.
 	- Removed separate licence file. Using GPL-3 licence.
-	- Updated version dependency to R to 4.2.0 .
 	- Added information for the included datasets.
 	- Added table of contents for the vignette.
 	- Updated the RolDE main functions documentation.
