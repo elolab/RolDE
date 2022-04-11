@@ -121,7 +121,7 @@ getUniqueCombRunsNew<-function(real_combs, unique_conditions){
 
 #Function to fill in missing values, only fill if a row has less than 2 missing values per group.
 #Do not impute more than two values per group for a row.
-fillGaps_New<-function(all_quant_vals, row, groups_for_rots){
+fillGaps_New<-function(all_num_values, row, groups_for_rots){
         row2<-unlist(lapply(seq_len(max(groups_for_rots)), function(x){
                 locs_na<-which(is.na(row[which(groups_for_rots==x)]))
                 locs_nonna<-which(!is.na(row[which(groups_for_rots==x)]))
@@ -129,8 +129,7 @@ fillGaps_New<-function(all_quant_vals, row, groups_for_rots){
                 row_vals<-row[which(groups_for_rots==x)]
                 if(length(locs_nonna)<2){
                         imp.num<-2-length(locs_nonna)
-                        vals<-sample(seq_len(1000), length(imp.num), replace = TRUE)
-                        vals<-all_quant_vals[vals]
+                        vals<-sample(all_num_values, length(imp.num), replace = TRUE)
                         row_vals[locs_na][seq_len(imp.num)]<-vals
                 }
                 row_vals
@@ -139,10 +138,9 @@ fillGaps_New<-function(all_quant_vals, row, groups_for_rots){
 }
 
 #Fill in all gaps in in a row.
-fillGapsAll_New<-function(all_quant_vals, row){
+fillGapsAll_New<-function(all_num_values, row){
         locs_na<-which(is.na(row))
-        vals<-sample(seq_len(1000), length(locs_na), replace = TRUE)
-        vals<-all_quant_vals[vals]
+        vals<-sample(all_num_values, length(locs_na), replace = TRUE)
         row[locs_na]<-vals
         return(row)
 }

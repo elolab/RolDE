@@ -91,11 +91,11 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
         if(any(is.nan(all_cond_pvals))){all_cond_pvals[which(is.nan(all_cond_pvals))]<-NA}
         if(any(all_cond_pvals=="NaN", na.rm = TRUE)){all_cond_pvals[which(all_cond_pvals=="NaN")]<-NA}
 
-        rownames(all_cond_pvals)<-rownames(data)
         all_cond_pvals<-data.frame(all_cond_pvals, stringsAsFactors = FALSE)
         #for(c in seq_len(ncol(all_cond_pvals))){all_cond_pvals[,c]<-as.numeric(as.character(all_cond_pvals[,c]))}
         all_cond_pvals<-data.frame(apply(all_cond_pvals, 2, function(x) {as.numeric(as.character(x))}), check.names = FALSE)
         colnames(all_cond_pvals)<-c("intercept", paste("degree", seq_len(degree_PolyReg)))
+        rownames(all_cond_pvals)<-rownames(data)
 
         res_frame<-res_frame[,c(seq_len(2))]
         res_frame<-data.frame(res_frame, stringsAsFactors = FALSE)

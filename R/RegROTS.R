@@ -198,15 +198,15 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
                 all_num_values<-na.omit(all_num_values)
 
                 #get enough quantile values used for imputation
-                all_quant_vals<-quantile(all_num_values, seq(from=0.001, to=1, by=0.001))
+                #all_quant_vals<-quantile(all_num_values, seq(from=0.001, to=1, by=0.001))
 
-                coef_scaled<-data.frame(t(apply(coef_scaled, 1, function(x) {fillGaps_New(all_quant_vals = all_quant_vals, row = x, groups_for_rots = groups_for_rots)})), check.names = FALSE)
+                coef_scaled<-data.frame(t(apply(coef_scaled, 1, function(x) {fillGaps_New(all_num_values = all_num_values, row = x, groups_for_rots = groups_for_rots)})), check.names = FALSE)
 
                 #Add a zeroish reference group to compare to.
                 ref_group<-data.frame(matrix(nrow = nrow(coef_scaled), ncol = length(which(groups_for_rots==1))))
 
                 #Fill compeletely in with random values from the distribution of all differences
-                ref_group<-data.frame(t(apply(ref_group, 1, function(x) {fillGapsAll_New(all_quant_vals = all_quant_vals, row = x)})), check.names = FALSE)
+                ref_group<-data.frame(t(apply(ref_group, 1, function(x) {fillGapsAll_New(all_num_values = all_num_values, row = x)})), check.names = FALSE)
 
                 #Make a new dataset and update groups for ROTS
                 coef_new<-cbind(coef_scaled, ref_group)

@@ -107,15 +107,15 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
                 all_num_values<-na.omit(all_num_values)
 
                 #get enough quantile values used for imputation
-                all_quant_vals<-quantile(all_num_values, seq(from=0.001, to=1, by=0.001))
+                #all_quant_vals<-quantile(all_num_values, seq(from=0.001, to=1, by=0.001))
 
-                diff_frame<-data.frame(t(apply(diff_frame, 1, function(x) {fillGaps_New(all_quant_vals = all_quant_vals, row = x, groups_for_rots = groups_for_rots)})), check.names = FALSE)
+                diff_frame<-data.frame(t(apply(diff_frame, 1, function(x) {fillGaps_New(all_num_values = all_num_values, row = x, groups_for_rots = groups_for_rots)})), check.names = FALSE)
 
                 #Add a zeroish reference group to compare to.
                 ref_group<-data.frame(matrix(nrow = nrow(diff_frame), ncol = length(which(groups_for_rots==1))))
 
                 #Fill compeletely in with random values from the distribution of all differences
-                ref_group<-data.frame(t(apply(ref_group, 1, function(x) {fillGapsAll_New(all_quant_vals = all_quant_vals, row = x)})), check.names = FALSE)
+                ref_group<-data.frame(t(apply(ref_group, 1, function(x) {fillGapsAll_New(all_num_values = all_num_values, row = x)})), check.names = FALSE)
 
                 #Make a new dataset and update groups for ROTS
                 diff_new<-cbind(diff_frame, ref_group)
