@@ -14,7 +14,8 @@
 
 #' @details The function plots the longitudinal expression of the top RolDE findings. The function can plot either the expression of a single finding
 #' or multiple top findings as indicated by the \code{top_n}. The findings can be plotted into a pdf file as indicated by the \code{file_name}.
-#' The given \code{file_name} should have a ".pdf" extension.
+#' The given \code{file_name} should have a ".pdf" extension. If the plottable feature has missing values, a mean value over the feature values will
+#' be imputted for visualization purposes. The missing / imputed value will be indicated with an empty circle symbol.
 #' @importFrom graphics legend lines mtext plot points
 #' @export
 #' @examples
@@ -60,9 +61,9 @@ plotFindings<-function(file_name=NULL, RolDE_res, top_n, col1="blue", col2="red"
 
         for(j in seq_len(length(features_to_plot))){
                 range_exprs<-range(data_plot[features_to_plot[j],c(des_plot$Sample)], na.rm = TRUE)
-                range_exprs<-c((range_exprs[1]-range_exprs[1]*0.1), (range_exprs[2]+range_exprs[1]*0.1))
+                range_exprs<-c((range_exprs[1]-range_exprs[1]*0.2), (range_exprs[2]+range_exprs[1]*0.2))
                 plot_name<-features_to_plot[j]
-                de_info<-paste("RolDE rank product: ", round(results$`RolDE Rank Product`[j],3), ", estimated significance value (ESV): ", round(results$`Estimated Significance Value`[j],3), ", multiple hypothesis adjusted ESV: ", round(results$`Adjusted Estimated Significance Value`[j],3), sep = "")
+                de_info<-paste("RolDE rank product: ", round(results[features_to_plot[j],2],3), ", estimated significance value (ESV): ", round(results[features_to_plot[j],3],3), ", multiple hypothesis adjusted ESV: ", round(results[features_to_plot[j],4],3), sep = "")
                 #Plot by conditions
                 #Condition 1
                 uniq_inds_cond1<-unique(des_plot_cond1$Individual)
@@ -87,7 +88,11 @@ plotFindings<-function(file_name=NULL, RolDE_res, top_n, col1="blue", col2="red"
                                 plot(y, x, xlim = range_time, ylim = range_exprs, pch=pchs, col=col.pchs, ylab = "Expression", xlab="Time / Longitudinal variable" , main = plot_name)
                                 lines(y,x, col=col1)
                                 mtext(3, text = de_info)
-                                legend("bottomright", legend = c(uniq_conds[1], uniq_conds[2], "Missing value - replicate / individua mean imputed for plot"), col=c(col1, col2, 1), pch = c(19,19,1), bty = "n")
+                                if(!is.null(file_name)){
+                                        legend("bottomright", legend = c(uniq_conds[1], uniq_conds[2], "Missing value - replicate / individua mean imputed for plot"), col=c(col1, col2, 1), pch = c(19,19,1), bty = "n")
+                                }else{
+                                        legend("bottom", legend = c(uniq_conds[1], uniq_conds[2], "Missing value - replicate / individua mean imputed for plot"), col=c(col1, col2, 1), pch = c(19,19,1), bty = "n", cex=0.5)
+                                }
                         }else{
                                 points(y,x, pch=pchs, col=col.pchs)
                                 lines(y,x, col=col1)

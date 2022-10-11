@@ -49,12 +49,21 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
         if(ncol(des_matrix)!=4){
                 stop("Wrong number of columns in the design matrix. Four columns needed, see documentation.")
         }
-
+        #Data must have column names and row names
+        if(is.null(colnames(data))){
+                stop("Data does not have column names. Data needs to have column names matching the sample names in the first column of the design matrix.")
+        }
+    
+        if(is.null(rownames(data))){
+                stop("Data does not have row names. Data needs to have unique row names (e.g. protein / feature identifiers).")
+        }
+        if(any(duplicated(rownames(data)))){
+                stop("Data does not have unique row names but some are duplicated. Data needs to have unique row names (e.g. protein / feature identifiers).")
+        }
         #All samples accounted for
         if(!all(colnames(data)==as.character(des_matrix[,1]))){
                 stop("Sample names not found. Sample names needed in the first column of the design matrix.")
         }
-
         #Number of unique conditions is correct
         if(length(unique(as.character(des_matrix[,2])))!=2){
                 stop("Number of conditions wrong in the design matrix. Two conditions needed and allowed.")
@@ -73,9 +82,16 @@ validateInput<-function(data, des_matrix, aligned, min_comm_diff, min_feat_obs, 
         }
 
         unique_individuals<-unique(as.numeric(as.character(des_matrix[,4])))
-
+        
         if(!all(as.numeric(as.character(des_matrix[,4]))%in%unique_individuals)){
                 stop("Wrong/missing individual ID for some samples in the design matrix. All samples must have valid individual IDs.")
+        }
+        
+        unique_individuals_condition1<-unique(as.numeric(as.character(des_matrix[which(des_matrix[,2]==unique_conditions[1]),4])))
+        unique_individuals_condition2<-unique(as.numeric(as.character(des_matrix[which(des_matrix[,2]==unique_conditions[2]),4])))
+        
+        if(any(unique_individuals_condition1%in%unique_individuals_condition2)){
+                stop("The same identifier for some individuals in both conditions. An individual must explicitly belong to a single condition. At the moment RolDE does not support paired / blocked design, but only unpaired comparisons. Adjustments for all effects (paired / blocked design) must be performed prior to applying RolDE.")
         }
 
         #check that each individual has enough timepoints

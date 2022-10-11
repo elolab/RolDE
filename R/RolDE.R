@@ -6,7 +6,7 @@
 #' between the conditions / groups. \code{RolDE} tolerates a fair amount of missing values and is especially suitable
 #' for noisy proteomics data.
 #'
-#' @param data the normalized data as as a numerical matrix or as a SummarizedExperiment instance. Features (rows) and variables (columns)
+#' @param data the preprocessed normalized data as as a numerical matrix or as a SummarizedExperiment instance. Features (rows) and variables (columns)
 #' of the data must have unique identifiers. If \code{data} is a SummarizedExperiment object, the design matrix must be included in the
 #' \code{colData} argument of the \code{data} object.
 #' @param des_matrix the design matrix for the \code{data}. Rows correspond to columns of

@@ -13,109 +13,106 @@ shifter <- function(x, n = 1) {
 #A Function to divide the individual into ROTS runs to preserve the proper degrees of
 #freedom for statistical testing, i.e. so that each individual is used only once
 #in each run. Make the sizes of the runs as balanced as possible.
+
+#Renewed 4.10.2022
 getUniqueCombRunsNew<-function(real_combs, unique_conditions){
         test_mat<-lapply(real_combs, function(x){
                 temp<-as.numeric(unlist(strsplit(x, ",")[[1]]))
         })
         test_mat<-matrix(unlist(test_mat), ncol=2, byrow = TRUE)
-
+        
         real_ind_cond1<-unique(test_mat[,1])
         real_ind_cond2<-unique(test_mat[,2])
-
+        
         lengths1<-unlist(lapply(real_ind_cond1, function(x){length(which(test_mat[,1]==x))}))
         names(lengths1)<-real_ind_cond1
-
+        
         lengths2<-unlist(lapply(real_ind_cond2, function(x){length(which(test_mat[,2]==x))}))
         names(lengths2)<-real_ind_cond2
-
+        
         min_comps<-max(lengths1, lengths2)
-
+        
         temp_list<-lapply(seq_len(min_comps), function(x){matrix(nrow=2, ncol=0)})
-
-        used_inds<-lapply(seq_len(min_comps), function(x){matrix(nrow=2, ncol=0)})
-
-        all_lengths<-c(lengths1, lengths2)
-        all_lengths<-sort(all_lengths, decreasing = TRUE)
-
-        start_ind<-1
-
-        for(ind in seq_len(length(all_lengths))){
-                if(names(all_lengths[ind])%in%real_ind_cond1){
-                        ind_cond<-1
-                }else{ind_cond<-2}
-
-                locs_ind<-which(test_mat[,ind_cond]%in%names(all_lengths[ind]))
-                ind_mat<-test_mat[locs_ind,]
-                if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
-                found<-logical(nrow(ind_mat))
-
-                for(j in seq_len(nrow(ind_mat))){
-                        for(i in seq_len(length(temp_list))){
-                                temp_mat<-temp_list[[i]]
-                                if(ncol(temp_mat)==0){next}
-                                for(co in seq_len(ncol(temp_mat))){
-                                        if(all(ind_mat[j,]==temp_mat[,co])){
-                                                found[j]<-TRUE
-                                        }
-                                }
-                        }
-                }
-
-                ind_mat<-ind_mat[!found,]
-                if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
-                if(nrow(ind_mat)==0){next}
-                continue<-TRUE
-                start_time<-Sys.time()
-                stop_ind<-0
-                while(continue){
-                        for(i in start_ind:length(temp_list)){
-                                temp_mat<-temp_list[[i]]
-                                if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
-                                if(nrow(ind_mat)==0){next}
+        
+        placed<-logical(nrow(test_mat))
+        start_time<-Sys.time() #make sure doesn't stay in eternal loop
+        while(!all(placed)){ # make a first run list, this should always converge?
+                for(i in seq_len(nrow(test_mat))){
+                        if(placed[i]){next}
+                        temp_comp<-test_mat[i,]
+                        for(j in seq_len(length(temp_list))){
+                                temp_mat<-temp_list[[j]]
+                                if(placed[i]){next}
                                 if(ncol(temp_mat)==0){
-                                        used_inds[[i]]<-cbind(used_inds[[i]], ind_mat[1,])
-                                        temp_mat<-cbind(temp_mat, ind_mat[1,])
-                                        ind_mat<-ind_mat[-1,]
-                                        if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
-                                        if(nrow(ind_mat)==0){
-                                                stop_ind<-i
-                                        }
+                                        temp_mat<-cbind(temp_mat, temp_comp)
+                                        temp_list[[j]]<-temp_mat
+                                        placed[i]<-TRUE
                                 }else{
-                                        if(!ind_mat[1,1]%in%used_inds[[i]][1,] & !ind_mat[1,2]%in%used_inds[[i]][2,] ){
-                                                used_inds[[i]]<-cbind(used_inds[[i]], ind_mat[1,])
-                                                temp_mat<-cbind(temp_mat, ind_mat[1,])
-                                                ind_mat<-ind_mat[-1,]
-                                                if(!is.matrix(ind_mat)){ind_mat<-t(as.matrix(ind_mat))}
-                                                if(nrow(ind_mat)==0){
-                                                        stop_ind<-i
-                                                }
+                                        if(!temp_comp[1]%in%temp_mat[1,] & !temp_comp[2]%in%temp_mat[2,]){
+                                                temp_mat<-cbind(temp_mat, temp_comp)
+                                                temp_list[[j]]<-temp_mat
+                                                placed[i]<-TRUE
                                         }
                                 }
-
-                                temp_list[[i]]<-temp_mat
                         }
-
-                        if(stop_ind!=0){
-                                if(stop_ind==length(temp_list)){
-                                        start_ind<-1
-                                }else{
-                                        start_ind<-stop_ind+1
-                                }
-                        }else{
-                                start_ind<-1
-                        }
-
-                        if(nrow(ind_mat)==0){continue<-FALSE}
-                        cur_time<-Sys.time()
-                        if(as.numeric(cur_time-start_time)>300){stop("Failure during ROTS run assignment. Could not assign runs.")}
                 }
+                cur_time<-Sys.time()
+                if(as.numeric(cur_time)-as.numeric(start_time)>300){stop("Failure during ROTS run assignment. Could not assign runs.")}
         }
-
+        
+        #Now try to balance runs if possible.
+        converged<-FALSE
+        l1<-lengths(temp_list)
+        max_l<-max(l1)
+        min_l<-min(l1)
+        
+        org_diff<-max_l-min_l
+        org_diff_diffs<-numeric()
+        
+        start_time<-Sys.time() 
+        while(!converged){
+                changed<-FALSE
+                l1<-lengths(temp_list)
+                max_l_loc<-which.max(l1)[1]
+        
+                temp_mat<-temp_list[[max_l_loc]]
+                ords<-rank(l1, ties.method = "first")
+                names(ords)<-seq_len(length(temp_list))
+                ords<-sort(ords)
+                
+                for(i in seq_len(length(ords))){
+                        temp_mat_compare<-temp_list[[as.numeric(names(ords)[i])]] #start filling from the smallest end
+                        pos_moves<-apply(temp_mat, 2, function(x) {!x[1]%in%temp_mat_compare[1,]&!x[2]%in%temp_mat_compare[2,]})
+                        if(any(pos_moves)){
+                                sel_move<-which(pos_moves)[1] #always just move one
+                                move_comp<-temp_mat[,sel_move]
+                                temp_mat<-temp_mat[,-sel_move]
+                                temp_mat_compare<-cbind(temp_mat_compare, move_comp)
+                                temp_list[[max_l_loc]]<-temp_mat
+                                temp_list[[as.numeric(names(ords)[i])]]<-temp_mat_compare
+                                changed<-TRUE
+                                break #break from the for loop, only take one element in each round
+                        }
+                }
+                diff2<-max(lengths(temp_list))-min(lengths(temp_list))
+                org_diff_diffs<-c(org_diff_diffs, org_diff-diff2)
+                
+                if(!changed){converged<-TRUE}
+                
+                if(length(org_diff_diffs)>50){ #look at least 50 rounds
+                        if(all(org_diff_diffs[c((length(org_diff_diffs)-49):(length(org_diff_diffs)))]==org_diff_diffs[length(org_diff_diffs)])){
+                                converged<-TRUE
+                        }
+                }
+                cur_time<-Sys.time()
+                if(as.numeric(cur_time)-as.numeric(start_time)>300){stop("Failure during ROTS run assignment. Could not assign runs.")}
+        }
+        
         temp_list<-lapply(temp_list, function(x) {
                 rownames(x)<-unique_conditions
                 x
         })
-
+        
         return(temp_list)
 }
 

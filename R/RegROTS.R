@@ -123,8 +123,11 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
                 groups_for_rots<-sort(rep(seq_len(degree+1),replicate_comparisons))
 
                 #Get the sample locations (columns) for the individuals in the comparisons for the current run.
-                control_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[1])})))
-                case_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[2])})))
+                control_locs<-apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[1])})
+                if(!is.list(control_locs) & is.matrix(control_locs)){control_locs<-as.list(as.data.frame(control_locs))}
+
+                case_locs<-apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[2])})
+                if(!is.list(case_locs) & is.matrix(case_locs)){case_locs<-as.list(as.data.frame(case_locs))}
 
                 #Store the timepoints for each individual in each comparison here
                 times_control<-lapply(control_locs, function(x) {des_matrix$Timepoint[x]})
@@ -214,7 +217,7 @@ RegROTS<-function(data, des_matrix, min_feat_obs, degree_RegROTS, rots_runs, n_c
                 colnames(coef_new)<-groups_for_rots
 
                 #Perform multigroup ROTS
-                rots_out<-ROTS::ROTS(data = coef_new, groups = groups_for_rots, B = 100, K = nrow(coef_new)/4, paired = FALSE, progress = FALSE, verbose = TRUE)
+                rots_out<-ROTS::ROTS(data = coef_new, groups = groups_for_rots, B = 100, K = nrow(coef_new)/4, paired = FALSE, progress = FALSE, verbose = FALSE)
                 rots_frame<-data.frame(d=rots_out$d, p=rots_out$pvalue)
 
                 res_mat<-matrix(nrow = nrow(data), ncol = 1)

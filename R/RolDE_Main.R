@@ -6,7 +6,7 @@
 #' between the conditions / groups. \code{RolDE} tolerates a fair amount of missing values and is especially suitable
 #' for noisy proteomics data.
 #'
-#' @param data the normalized data as as a numerical matrix or as a SummarizedExperiment instance. Features (rows) and variables (columns)
+#' @param data the preprocessed normalized data as as a numerical matrix or as a SummarizedExperiment instance. Features (rows) and variables (columns)
 #' of the data must have unique identifiers. If \code{data} is a SummarizedExperiment object, the design matrix must be included in the
 #' \code{colData} argument of the \code{data} object.
 #' @param des_matrix the design matrix for the \code{data}. Rows correspond to columns of
@@ -426,6 +426,7 @@ RolDE_Main<-function(data, des_matrix=NULL, aligned=TRUE, min_comm_diff="auto", 
                 if(is.null(fin_res)){stop("\nFailure during significance value estimation\n")}
         } else {
                 fin_res<-rank_products
+                colnames(fin_res)<-c("Feature ID", "RolDE Rank Product")
         }
 
         ret_list<-list(fin_res, res_regrots, reg_rots_pval, res_diffrots, diff_rots_pval, res_polyreg, polyreg_pval, rots_runs, method_degrees, input_list)

@@ -1,7 +1,7 @@
 Package: RolDE
 Type: Package
 Title: RolDE: Robust longitudinal Differential Expression
-Version: 0.99.4
+Version: 0.99.5
 Description: RolDE detects longitudinal differential expression between 
     two conditions in noisy high-troughput data. Suitable even for 
     data with a moderate amount of missing values.RolDE is a composite method, 

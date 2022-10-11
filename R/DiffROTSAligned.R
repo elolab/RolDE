@@ -10,7 +10,7 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
         case<-unique_conditions[2]
 
         time_points<-unique(as.numeric(as.character(des_matrix$Timepoint)))
-        nr_timepoints<-max(unique(as.numeric(as.character(des_matrix$Timepoint))))
+        nr_timepoints<-length(unique(as.numeric(as.character(des_matrix$Timepoint))))
 
         #The main function to compare expression
         getDiff<-function(r1, r2, time1, time2, time_points){
@@ -47,8 +47,11 @@ DiffROTSAligned<-function(data, des_matrix, min_comm_diff, min_feat_obs, rots_ru
                 groups_for_rots<-sort(rep(seq_len(nr_timepoints),replicate_comparisons))
 
                 #Get the sample locations (columns) for the individuals in the comparisons for the current run.
-                control_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[1])})))
-                case_locs<-as.list(as.data.frame(apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[2])})))
+                control_locs<-apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[1])})
+                if(!is.list(control_locs) & is.matrix(control_locs)){control_locs<-as.list(as.data.frame(control_locs))}
+
+                case_locs<-apply(run_comparisons, 2, function(x){which(des_matrix$Individual%in%x[2])})
+                if(!is.list(case_locs) & is.matrix(case_locs)){case_locs<-as.list(as.data.frame(case_locs))}
 
                 #Store the timepoints for each individual in each comparison here
                 times_control<-lapply(control_locs, function(x) {des_matrix$Timepoint[x]})

@@ -6,8 +6,6 @@ PolyReg<-function(data, des_matrix, degree_PolyReg, n_cores){
         control<-unique_conditions[1]
         case<-unique_conditions[2]
 
-        nr_timepoints<-max(unique(as.numeric(as.character(des_matrix$Timepoint))))
-
         #store all condition related p-values here that can be later used in estimating significance values
         #if the null hypothesis is true (e.g. random data), this will overall be uniform, even though the minimum p-value will not be
         res_frame<-matrix(nrow=nrow(data), ncol=(3+degree_PolyReg))

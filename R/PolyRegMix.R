@@ -6,8 +6,6 @@ PolyRegMix<-function(data, des_matrix, degree_PolyReg, n_cores, model_type){
         control<-unique_conditions[1]
         case<-unique_conditions[2]
 
-        nr_timepoints<-max(unique(as.numeric(as.character(des_matrix$Timepoint))))
-
         res_frame<-matrix(nrow=nrow(data), ncol=(3+degree_PolyReg))
         r<-NULL
 

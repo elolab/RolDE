@@ -1,3 +1,11 @@
+CHANGES IN VERSION 0.99.5
+--------------------------
+	- Fixed bugs according to defining the ROTS runs.
+	- Fixed some bugs related to plotting the findings with plotFindings.
+	- Generalized some code better.
+	- Removed unused code.
+	- Complemented input validation.
+
 CHANGES IN VERSION 0.99.4
 --------------------------
 	- Updated version dependency to R to 4.2.0.

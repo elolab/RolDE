@@ -15,7 +15,7 @@ RolDE(
 )
 }
 \arguments{
-\item{data}{the normalized data as as a numerical matrix or as a SummarizedExperiment instance. Features (rows) and variables (columns)
+\item{data}{the preprocessed normalized data as as a numerical matrix or as a SummarizedExperiment instance. Features (rows) and variables (columns)
 of the data must have unique identifiers. If \code{data} is a SummarizedExperiment object, the design matrix must be included in the
 \code{colData} argument of the \code{data} object.}
 

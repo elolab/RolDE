@@ -29,7 +29,8 @@ Plot the findings from longitudinal differential expression analysis with RolDE.
 \details{
 The function plots the longitudinal expression of the top RolDE findings. The function can plot either the expression of a single finding
 or multiple top findings as indicated by the \code{top_n}. The findings can be plotted into a pdf file as indicated by the \code{file_name}.
-The given \code{file_name} should have a ".pdf" extension.
+The given \code{file_name} should have a ".pdf" extension. If the plottable feature has missing values, a mean value over the feature values will
+be imputted for visualization purposes. The missing / imputed value will be indicated with an empty circle symbol.
 }
 \examples{
 data("res3")
