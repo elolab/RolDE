@@ -10,9 +10,8 @@ Description: RolDE detects longitudinal differential expression between
     these diverse modules allows RolDE to robustly detect
     varying differences in longitudinal trends and expression levels in
     diverse data types and experimental settings.
-Authors@R: c(person("Tommi", "Valikangas",
-             email = "tsvali@utu.fi",
-             role=c("cre", "aut")))
+Authors@R: c(person("Tommi", "Valikangas", email = "tsvali@utu.fi", role=c("aut")),
+    person("Medical Bioinformatics Centre", email = "mbc@utu.fi", role=c("cre")))
 License: GPL-3
 Imports: stats, methods, ROTS, matrixStats, foreach, parallel, doParallel, doRNG, rngtools, SummarizedExperiment, nlme, qvalue, grDevices, graphics, utils
 Depends: R (>= 4.2.0)
